@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qs>
+    <loop num="28">
+        <eh>680</eh>
+        <eh>416</eh>
+        <eh>1952</eh>
+        <eh>408</eh>
+        <eh>2108</eh>
+        <eh>1980</eh>
+        <eh>1644</eh>
+        <eh>1516</eh>
+        <eh>1180</eh>
+        <eh>716</eh>
+        <eh>674</eh>
+        <eh>1762</eh>
+        <eh>2105</eh>
+        <eh>2014</eh>
+        <eh>1086</eh>
+        <eh>1177</eh>
+        <eh>1204</eh>
+        <eh>1012</eh>
+        <eh>1015</eh>
+        <eh>1061</eh>
+        <eh>1024</eh>
+        <eh>415</eh>
+        <eh>1488</eh>
+        <eh>1949</eh>
+        <eh>2017</eh>
+        <eh>1298</eh>
+        <eh>1089</eh>
+        <eh>1021</eh>
+    </loop>
+    <obs num="0"/>
+    <interpath num="4">
+        <eh>1178</eh>
+        <eh>1202</eh>
+        <eh>1028</eh>
+        <eh>1020</eh>
+    </interpath>
+    <crossconf>
+        <hexs0 num="3">
+            <ch>234</ch>
+            <ch>233</ch>
+            <ch>183</ch>
+        </hexs0>
+        <hexs1 num="3">
+            <ch>365</ch>
+            <ch>364</ch>
+            <ch>314</ch>
+        </hexs1>
+        <hexs2 num="6">
+            <ch>357</ch>
+            <ch>381</ch>
+            <ch>382</ch>
+            <ch>390</ch>
+            <ch>307</ch>
+            <ch>306</ch>
+        </hexs2>
+        <hexs3 num="6">
+            <ch>226</ch>
+            <ch>250</ch>
+            <ch>251</ch>
+            <ch>259</ch>
+            <ch>176</ch>
+            <ch>175</ch>
+        </hexs3>
+    </crossconf>
+    <quads num="0"/>
+</qs>

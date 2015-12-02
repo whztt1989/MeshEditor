@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<group>
+    <vertices num="0"/>
+    <edges num="42">
+        <eh>13091</eh>
+        <eh>13667</eh>
+        <eh>12773</eh>
+        <eh>13029</eh>
+        <eh>3877</eh>
+        <eh>9573</eh>
+        <eh>13386</eh>
+        <eh>13130</eh>
+        <eh>13025</eh>
+        <eh>4257</eh>
+        <eh>13255</eh>
+        <eh>13127</eh>
+        <eh>3527</eh>
+        <eh>8705</eh>
+        <eh>4245</eh>
+        <eh>2837</eh>
+        <eh>4084</eh>
+        <eh>3588</eh>
+        <eh>8708</eh>
+        <eh>9540</eh>
+        <eh>11524</eh>
+        <eh>2436</eh>
+        <eh>9657</eh>
+        <eh>4857</eh>
+        <eh>13849</eh>
+        <eh>12972</eh>
+        <eh>12608</eh>
+        <eh>5075</eh>
+        <eh>9161</eh>
+        <eh>9138</eh>
+        <eh>9222</eh>
+        <eh>12930</eh>
+        <eh>13814</eh>
+        <eh>2486</eh>
+        <eh>3559</eh>
+        <eh>3497</eh>
+        <eh>3561</eh>
+        <eh>3469</eh>
+        <eh>3153</eh>
+        <eh>2539</eh>
+        <eh>2929</eh>
+        <eh>3245</eh>
+    </edges>
+    <faces num="0"/>
+    <cells num="0"/>
+</group>
+

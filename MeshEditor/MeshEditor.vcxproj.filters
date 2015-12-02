@@ -1,0 +1,568 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;cxx;c;def</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Debug">
+      <UniqueIdentifier>{043da25d-d69c-439c-9622-54ecd6279d45}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Release">
+      <UniqueIdentifier>{48dac372-f155-4e75-8564-29a544d60bf6}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="ControlWidgets">
+      <UniqueIdentifier>{a44da238-05ca-41a0-b343-2c746522f77b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HoopsView">
+      <UniqueIdentifier>{ab6ee161-5d68-4bd1-9f99-c376a8c7813d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TabWidgets">
+      <UniqueIdentifier>{6d0def89-7ff0-49d2-8020-425ecea9f13f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OneSimpleSheetInflation">
+      <UniqueIdentifier>{496501c1-e7b5-4518-9488-d9cda81bdf07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OneSimpleSheetExtraction">
+      <UniqueIdentifier>{8344d625-ff28-47fa-bf24-b1175e606a93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MeshMatching">
+      <UniqueIdentifier>{43b11268-b1cb-4558-8551-1f3a42e6be2a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mainwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_mainwindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_mainwindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_mainwindow.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_hoopsview.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_hoopsview.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="HQWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_HQWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_HQWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncDefs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshDefs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_mesheditwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_mesheditwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="OneIntLoop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrossCrossPath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrossCrossPathStep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DualDefs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshDijkstra.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexVertexPath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_meshrendercontrolwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_meshrendercontrolwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="meshrendercontrolwidget.cpp">
+      <Filter>ControlWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="hoopsview.cpp">
+      <Filter>HoopsView</Filter>
+    </ClCompile>
+    <ClCompile Include="hoopsview_group.cpp">
+      <Filter>HoopsView</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_mousecontrolwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_mousecontrolwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="mousecontrolwidget.cpp">
+      <Filter>ControlWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_filecontrolwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_filecontrolwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="filecontrolwidget.cpp">
+      <Filter>ControlWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_lsi.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_groupcontrolwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_groupcontrolwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="groupcontrolwidget.cpp">
+      <Filter>ControlWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_test.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncDefs_Optimization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_optimization.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncDefs_Rendering.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FaceFacePath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FuncDefs_DualTopology.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OneSimpleSheetInflation.cpp">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClCompile>
+    <ClCompile Include="OneSimpleHandlerBase.cpp">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClCompile>
+    <ClCompile Include="NoIntCompHandler.cpp">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClCompile>
+    <ClCompile Include="TwoIntCompHandler.cpp">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClCompile>
+    <ClCompile Include="OpCutMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_lse.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="OneSimpleSheetExtraction.cpp">
+      <Filter>OneSimpleSheetExtraction</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_lc.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexVertexBoundaryPath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_dc.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthCutHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshMatchingHandler.cpp">
+      <Filter>MeshMatching</Filter>
+    </ClCompile>
+    <ClCompile Include="polysim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_mesheditcontroller.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_mesheditcontroller.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="ManualMeshMatchWidget.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ManualMeshMatchWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ManualMeshMatchWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="meshmatchassemblyviewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_meshmatchassemblyviewer.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_meshmatchassemblyviewer.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_sheet_extraction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_sheet_inflation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chordmatchwidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_chordmatchwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_chordmatchwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_chord_operations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_column_collapse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_paper_drawing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_mesh_opt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditcontroller_cluster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_qs.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh_min_cut.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="loop_completion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesheditwidget_pd.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_sheetintdiagramviewer.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_sheetintdiagramviewer.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="sheetintdiagramviewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SheetIntDiagram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_sheetintdiagramwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_sheetintdiagramwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="sheetintdiagramwidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_sheetintdiagramsdashboard.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_sheetintdiagramsdashboard.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="sheetintdiagramsdashboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_meshcut.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_meshcut.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="meshcut.cpp">
+      <Filter>TabWidgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_choicesselectionwidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_choicesselectionwidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="choicesselectionwidget.cpp">
+      <Filter>ControlWidgets</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_mainwindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FuncDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="acis_headers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_mesheditwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OneIntLoop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrossCrossPath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrossCrossPathStep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DualDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshDijkstra.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PrioritySetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexVertexPath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_meshrendercontrolwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_mousecontrolwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_filecontrolwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_groupcontrolwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FaceFacePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OneSimpleSheetInflation.h">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClInclude>
+    <ClInclude Include="OneSimpleHandlerBase.h">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClInclude>
+    <ClInclude Include="NoIntCompHandler.h">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClInclude>
+    <ClInclude Include="TwoIntCompHandler.h">
+      <Filter>OneSimpleSheetInflation</Filter>
+    </ClInclude>
+    <ClInclude Include="OpCutMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OneSimpleSheetExtraction.h">
+      <Filter>OneSimpleSheetExtraction</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexVertexBoundaryPath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthCutHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshMatchingHandler.h">
+      <Filter>MeshMatching</Filter>
+    </ClInclude>
+    <ClInclude Include="polysim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_manualmeshmatch.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_mesheditcontroller.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_meshmatchassemblyviewer.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_chordmatchwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="max_flow_min_cut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_min_cut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="loop_completion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SheetIntDiagram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_sheetintdiagramwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_sheetintdiagramsdashboard.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_meshcut.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_choicesselectionwidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mainwindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mainwindow.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="HQWidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshrendercontrolwidget.ui">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshrendercontrolwidget.h">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="hoopsview.h">
+      <Filter>HoopsView</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mousecontrolwidget.ui">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mousecontrolwidget.h">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="filecontrolwidget.ui">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="filecontrolwidget.h">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mesheditwidget.ui">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mesheditwidget.h">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="groupcontrolwidget.ui">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="groupcontrolwidget.h">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="manualmeshmatch.ui">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mesheditcontroller.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mesheditcontroller.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ManualMeshMatchWidget.h">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshmatchassemblyviewer.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshmatchassemblyviewer.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="chordmatchwidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sheetintdiagramwidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sheetintdiagramviewer.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sheetintdiagramwidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sheetintdiagramsdashboard.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sheetintdiagramsdashboard.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshcut.ui">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="meshcut.h">
+      <Filter>TabWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="choicesselectionwidget.h">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="choicesselectionwidget.ui">
+      <Filter>ControlWidgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="chordmatchwidget.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MeshEditor.rc" />
+  </ItemGroup>
+</Project>

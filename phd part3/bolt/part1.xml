@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<meshedit name="part1">
+	<path meshpath="part1.ovm" modelpath="part1.sat" />
+</meshedit>

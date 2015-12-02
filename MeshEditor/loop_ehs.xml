@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<group>
+    <vertices num="0"/>
+    <edges num="8">
+        <eh>349</eh>
+        <eh>189</eh>
+        <eh>559</eh>
+        <eh>687</eh>
+        <eh>734</eh>
+        <eh>697</eh>
+        <eh>588</eh>
+        <eh>451</eh>
+    </edges>
+    <faces num="20">
+        <fh>2890</fh>
+        <fh>1866</fh>
+        <fh>2156</fh>
+        <fh>2588</fh>
+        <fh>1437</fh>
+        <fh>2461</fh>
+        <fh>1869</fh>
+        <fh>2295</fh>
+        <fh>1440</fh>
+        <fh>2585</fh>
+        <fh>1730</fh>
+        <fh>2727</fh>
+        <fh>2032</fh>
+        <fh>3017</fh>
+        <fh>2159</fh>
+        <fh>1603</fh>
+        <fh>1727</fh>
+        <fh>2298</fh>
+        <fh>3014</fh>
+        <fh>2724</fh>
+    </faces>
+    <cells num="0"/>
+</group>
+

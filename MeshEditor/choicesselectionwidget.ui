@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ChoicesSelectionWidget</class>
+ <widget class="QWidget" name="ChoicesSelectionWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>137</width>
+    <height>156</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ChoicesSelectionWidget</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="lb_Choices1">
+       <property name="text">
+        <string>选项1：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="cb_Choices1"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="lb_Choices2">
+       <property name="text">
+        <string>选项2：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="cb_Choices2"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="lb_Choices3">
+       <property name="text">
+        <string>选项3：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="cb_Choices3"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lb_Choices4">
+       <property name="text">
+        <string>选项4：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="cb_Choices4"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pb_OK">
+     <property name="text">
+      <string>确定</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
