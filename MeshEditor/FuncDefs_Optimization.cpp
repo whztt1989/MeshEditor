@@ -730,16 +730,13 @@ namespace JC{
 
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 		{
+			if (!mesh->is_boundary (*v_it)){
+				volume_vhs.insert (*v_it);
+				continue;
+			}
 			auto entity_ptr_uint = V_ENTITY_PTR[*v_it];
-			if (entity_ptr_uint == 0) volume_vhs.insert (*v_it);
-			else if (entity_ptr_uint == -1){
-				//判断一下这个新点是否在体内，如果是的话，则将他的entity_ptr设置为0
-				if (!mesh->is_boundary (*v_it)){
-					V_ENTITY_PTR[*v_it] = 0;
-					volume_vhs.insert (*v_it);
-				}else
-					new_boundary_vhs.insert (*v_it);
-			}else{
+			if (entity_ptr_uint == 0) new_boundary_vhs.insert (*v_it);
+			else{
 				ENTITY *entity = (ENTITY*)(entity_ptr_uint);
 				if (is_VERTEX (entity)) vertices_mapping[(VERTEX*)entity] = *v_it;
 				//else if (is_EDGE (entity)) edges_vertices_mapping[(EDGE*)entity].insert (*v_it);

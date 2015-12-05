@@ -328,6 +328,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pb_Determine_Shrink_Set">
+         <property name="text">
+          <string>确定ShrinkSet</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_3">
          <property name="title">
           <string>Quad集修改</string>
@@ -378,13 +385,6 @@
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pb_Determine_Shrink_Set">
-         <property name="text">
-          <string>确定ShrinkSet</string>
-         </property>
         </widget>
        </item>
        <item>
@@ -1174,6 +1174,5 @@
  <buttongroups>
   <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
-  <buttongroup name="buttonGroup_3"/>
  </buttongroups>
 </ui>

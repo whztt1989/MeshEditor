@@ -81,6 +81,7 @@
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(A3DT)\lib\NT_VC10_DLL;$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_stream\lib\nt_i386_vc10;$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_3dgs\lib\nt_i386_vc10;$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_mvo\lib\nt_i386_vc10;$(HOOPS_INSTALL_DIR)\Dev_Tools\utility\lib\nt_i386_vc10;$(OVM_INSTALL_DIR)\lib;$(OM_INSTALL_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>qtmain.lib;QtCore4.lib;QtGui4.lib;QtXml4.lib;QtScript4.lib;hoops.lib;hoops_mvo_mgk.lib;hoops_utilsstat_md.lib;hoops_stream.lib;OpenVolumeMesh.lib;OpenMeshCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

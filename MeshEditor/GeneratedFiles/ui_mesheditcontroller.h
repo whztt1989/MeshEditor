@@ -67,6 +67,7 @@ public:
     QPushButton *pb_Direct_Get_Quad_Set;
     QPushButton *pb_PCS_Depth_Get_Quad_Set;
     QPushButton *pb_Sweep_Get_Quad_Set;
+    QPushButton *pb_Determine_Shrink_Set;
     QGroupBox *groupBox_3;
     QVBoxLayout *verticalLayout_8;
     QPushButton *pushButton_Modify_Quad_Set_For_SI;
@@ -74,7 +75,6 @@ public:
     QPushButton *pushButton_Add_Quad_For_SI;
     QPushButton *pushButton_Remove_Quad_For_SI;
     QPushButton *pushButton_Modify_Quad_Set_OK_For_SI;
-    QPushButton *pb_Determine_Shrink_Set;
     QPushButton *pushButton_Sheet_Inflation_For_SI;
     QPushButton *pushButton_postprocess_for_SI;
     QSpacerItem *verticalSpacer;
@@ -163,7 +163,6 @@ public:
     QSpacerItem *verticalSpacer_15;
     QButtonGroup *buttonGroup_2;
     QButtonGroup *buttonGroup;
-    QButtonGroup *buttonGroup_3;
 
     void setupUi(QWidget *MeshEditController)
     {
@@ -358,6 +357,11 @@ public:
 
         verticalLayout_2->addWidget(groupBox_2);
 
+        pb_Determine_Shrink_Set = new QPushButton(page_Sheet_Inflation);
+        pb_Determine_Shrink_Set->setObjectName(QString::fromUtf8("pb_Determine_Shrink_Set"));
+
+        verticalLayout_2->addWidget(pb_Determine_Shrink_Set);
+
         groupBox_3 = new QGroupBox(page_Sheet_Inflation);
         groupBox_3->setObjectName(QString::fromUtf8("groupBox_3"));
         verticalLayout_8 = new QVBoxLayout(groupBox_3);
@@ -394,11 +398,6 @@ public:
 
 
         verticalLayout_2->addWidget(groupBox_3);
-
-        pb_Determine_Shrink_Set = new QPushButton(page_Sheet_Inflation);
-        pb_Determine_Shrink_Set->setObjectName(QString::fromUtf8("pb_Determine_Shrink_Set"));
-
-        verticalLayout_2->addWidget(pb_Determine_Shrink_Set);
 
         pushButton_Sheet_Inflation_For_SI = new QPushButton(page_Sheet_Inflation);
         pushButton_Sheet_Inflation_For_SI->setObjectName(QString::fromUtf8("pushButton_Sheet_Inflation_For_SI"));
@@ -894,12 +893,12 @@ public:
         pb_Direct_Get_Quad_Set->setText(QApplication::translate("MeshEditController", "\347\233\264\346\216\245\350\216\267\345\217\226", 0, QApplication::UnicodeUTF8));
         pb_PCS_Depth_Get_Quad_Set->setText(QApplication::translate("MeshEditController", "PCS\346\267\261\345\272\246\350\216\267\345\217\226", 0, QApplication::UnicodeUTF8));
         pb_Sweep_Get_Quad_Set->setText(QApplication::translate("MeshEditController", "\346\211\253\345\261\202\350\216\267\345\217\226", 0, QApplication::UnicodeUTF8));
+        pb_Determine_Shrink_Set->setText(QApplication::translate("MeshEditController", "\347\241\256\345\256\232ShrinkSet", 0, QApplication::UnicodeUTF8));
         groupBox_3->setTitle(QApplication::translate("MeshEditController", "Quad\351\233\206\344\277\256\346\224\271", 0, QApplication::UnicodeUTF8));
         pushButton_Modify_Quad_Set_For_SI->setText(QApplication::translate("MeshEditController", "\344\277\256\346\224\271\351\235\242\351\233\206", 0, QApplication::UnicodeUTF8));
         pushButton_Add_Quad_For_SI->setText(QApplication::translate("MeshEditController", "\345\242\236\345\212\240", 0, QApplication::UnicodeUTF8));
         pushButton_Remove_Quad_For_SI->setText(QApplication::translate("MeshEditController", "\345\210\240\351\231\244", 0, QApplication::UnicodeUTF8));
         pushButton_Modify_Quad_Set_OK_For_SI->setText(QApplication::translate("MeshEditController", "\347\241\256\345\256\232", 0, QApplication::UnicodeUTF8));
-        pb_Determine_Shrink_Set->setText(QApplication::translate("MeshEditController", "\347\241\256\345\256\232ShrinkSet", 0, QApplication::UnicodeUTF8));
         pushButton_Sheet_Inflation_For_SI->setText(QApplication::translate("MeshEditController", "\347\224\237\346\210\220sheet", 0, QApplication::UnicodeUTF8));
         pushButton_postprocess_for_SI->setText(QApplication::translate("MeshEditController", "\345\220\216\347\273\255\345\244\204\347\220\206", 0, QApplication::UnicodeUTF8));
         toolBox->setItemText(toolBox->indexOf(page_Sheet_Inflation), QApplication::translate("MeshEditController", "Sheet\347\224\237\346\210\220", 0, QApplication::UnicodeUTF8));

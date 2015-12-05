@@ -3,6 +3,7 @@
 #include "hoopsview.h"
 #include <QMessageBox>
 #include <QInputDialog>
+#include "mesh_min_cut.h"
 
 void MeshEditController::on_select_edges_for_si ()
 {
@@ -225,6 +226,45 @@ std::unordered_set<OvmCeH> get_chs_within_depth (VolumeMesh *mesh, int max_depth
 
 void MeshEditController::on_get_quad_set_directly_for_si ()
 {
+	std::unordered_set<OvmFaH> bound_fhs;
+	for (auto bf_it = mesh->bf_iter(); bf_it; ++bf_it)
+	{
+		bound_fhs.insert (*bf_it);
+	}
+
+	std::vector<std::unordered_set<OvmFaH> > fhs_patches;
+	JC::get_separate_fhs_patches (mesh, bound_fhs, loops_ehs, fhs_patches);
+
+	std::vector<std::unordered_set<OvmCeH> > hex_sets;
+	foreach (auto &fhs_patch, fhs_patches){
+		std::unordered_set<OvmCeH> hex_set;
+		JC::get_direct_adjacent_hexas (mesh, fhs_patch, hex_set);
+		hex_sets.push_back (hex_set);
+	}
+
+	inflation_quad_set.clear ();
+	for (int i = 0; i != hex_sets.size () - 1; ++i){
+		std::unordered_set<OvmCeH> other_chs;
+		for (int j = 0; j != hex_sets.size (); ++j){
+			if (j == i) continue;
+			foreach (auto &ch, hex_sets[j]) other_chs.insert (ch);
+		}
+		auto sep_fhs = get_volume_mesh_min_cut (mesh, hex_sets[i], other_chs);
+		foreach (auto fh, sep_fhs)
+			inflation_quad_set.insert (fh);
+	}
+
+	hoopsview->derender_mesh_groups ("sheet inflation", "quad set for inflation", true);
+	auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "quad set for inflation");
+	group->fhs = inflation_quad_set;
+	group->add_edges_on_quad_set ();
+
+	MeshRenderOptions render_options;
+	render_options.face_color = "blue";
+	render_options.edge_color = "red";
+	render_options.edge_width = 6;
+	hoopsview->render_mesh_group (group, render_options);
+	hoopsview->show_mesh_faces (false);
 }
 
 void MeshEditController::on_pcs_depth_get_quad_set_for_si ()
