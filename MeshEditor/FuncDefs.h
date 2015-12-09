@@ -1,4 +1,4 @@
-#ifndef _FUNC_DEFS_H_
+ï»¿#ifndef _FUNC_DEFS_H_
 #define _FUNC_DEFS_H_
 
 #include <string>
@@ -288,7 +288,7 @@ namespace JC{
 	bool is_manifold (VolumeMesh *mesh, std::unordered_set<OvmCeH> &chs);
 
 
-	//ÅĞ¶ÏÒ»¸öÁùÃæÌå¼¯ºÏÊÇ·ñÁ¬Í¨
+	//åˆ¤æ–­ä¸€ä¸ªå…­é¢ä½“é›†åˆæ˜¯å¦è¿é€š
 	bool is_hexa_set_connected (VolumeMesh *mesh, const std::unordered_set<OvmCeH> &chs);
 
 	void get_ccw_boundary_edges_faces_around_vertex (VolumeMesh *mesh, OvmVeH vh,
@@ -321,10 +321,10 @@ namespace JC{
 	OvmVeH get_common_vertex_handle (VolumeMesh *mesh, OvmEgH eh1, OvmEgH eh2);
 	OvmEgH get_common_edge_handle (VolumeMesh *mesh, OvmFaH fh1, OvmFaH fh2);
 
-	//´ÓÒ»×éÊ×Î²ÏàÁ¬µÄÍø¸ñ±ßÖĞµÃµ½Ò»¸ö·½ÏòµÄ°ë±ß
+	//ä»ä¸€ç»„é¦–å°¾ç›¸è¿çš„ç½‘æ ¼è¾¹ä¸­å¾—åˆ°ä¸€ä¸ªæ–¹å‘çš„åŠè¾¹
 	void get_piecewise_halfedges_from_edges (VolumeMesh *mesh, std::vector<OvmEgH> &ehs, bool forward,
 		std::vector<OvmHaEgH> &hehs);
-	//´ÓÎŞĞòµÄÒ»¸ö±ß¼¯ºÏÖĞ£¬ÕûÀí³öÒ»¸ö·½ÏòµÄ°ë±ß
+	//ä»æ— åºçš„ä¸€ä¸ªè¾¹é›†åˆä¸­ï¼Œæ•´ç†å‡ºä¸€ä¸ªæ–¹å‘çš„åŠè¾¹
 	void get_piecewise_halfedges_from_edges (VolumeMesh *mesh, std::unordered_set<OvmEgH> &ehs, OvmHaEgH start_heh, bool forward,
 		std::vector<OvmHaEgH> &hehs);
 
@@ -334,7 +334,11 @@ namespace JC{
 		std::vector<std::unordered_set<OvmCeH> > *sep_chs_sets);
 	void get_separate_chs_sets (VolumeMesh *mesh, std::unordered_set<OvmCeH> *all_chs,
 		std::unordered_set<OvmFaH> *sep_fhs, std::vector<std::unordered_set<OvmCeH> > *sep_chs_sets);
+	//è·å¾—å•ä¸ªå‡ ä½•é¢ä¸Šçš„ç½‘æ ¼é¢
 	void get_fhs_on_acis_face (VolumeMesh *mesh, FACE *acis_face, std::unordered_set<OvmFaH> &fhs);
+	//è·å¾—å¤šä¸ªå‡ ä½•é¢ä¸Šçš„ç½‘æ ¼é¢
+	void get_fhs_on_acis_faces (VolumeMesh *mesh, std::set<FACE *> acis_face, std::unordered_set<OvmFaH> &fhs);
+	std::unordered_set<OvmFaH> get_fhs_on_acis_faces (VolumeMesh *mesh, std::set<FACE *> acis_face);
 
 	FACE * get_associated_geometry_face_of_boundary_fh (VolumeMesh *mesh, OvmFaH fh);
 	EDGE * get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh, OpenVolumeMesh::VertexPropertyT<unsigned long> &V_ENTITY_PTR);

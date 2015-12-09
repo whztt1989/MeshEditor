@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include <Windows.h>
 #include "ManualMeshMatchWidget.h"
 #include "bool_api_options.hxx"
@@ -13,7 +13,6 @@ ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 {
 	ui.setupUi(this);
 	body1 = body2 = NULL;
-	mm_handler = NULL;
 	hoopsview1 = ui.hoopsview1; hoopsview2 = ui.hoopsview2;
 	mesh_edit_controller1 = ui.mesh_edit_controller1;
 	mesh_edit_controller2 = ui.mesh_edit_controller2;
@@ -26,6 +25,7 @@ ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 	chord_match_widget->setWindowFlags (Qt::Tool);
 	chord_match_widget->hide ();
 	prev_sel_chord1 = prev_sel_chord2 = NULL;
+	mm_handler = new MeshMatchingHandler;
 
 	connect (chord_match_widget, SIGNAL (chord_pair_highlight (uint, uint)),
 		SLOT (on_highlight_chord_pair (uint, uint)));
@@ -41,6 +41,7 @@ ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 		SLOT (on_match_two_chords ()));
 	connect (ui.pushButton_Redraw_Matched_Chords, SIGNAL (clicked ()),
 		SLOT (on_update_matched_chords ()));
+	connect (ui.pushButton_Get_Polyline, SIGNAL (clicked ()), SLOT (on_get_polyline ()));
 	connect (ui.pushButton_Check_Match, SIGNAL (clicked ()),
 		SLOT (on_check_match ()));
 	connect (ui.pushButton_Show_Interface, SIGNAL (clicked ()),
@@ -53,83 +54,17 @@ ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 		SLOT (on_auto_match ()));
 	connect (ui.pushButton_Merge, SIGNAL (clicked ()),
 		SLOT (on_merge ()));
-	connect (ui.pushButton_See_Only_Left, SIGNAL (clicked ()),
-		SLOT (on_see_only_left ()));
+	connect (ui.cb_Show_Left_Side, SIGNAL (clicked ()),
+		SLOT (on_show_left ()));
+	connect (ui.cb_Show_Right_Side, SIGNAL (clicked ()),
+		SLOT (on_show_right ()));
 }
 
 ManualMeshMatchWidget::~ManualMeshMatchWidget()
 {
-
+	delete mm_handler;
 }
 
-void my_render_volume_mesh_boundary (VolumeMesh *mesh, VolumeMesh *meshwhole, BODY *body)
-{
-	std::unordered_set<OvmCeH> out_body_chs;
-	for (auto c_it = meshwhole->cells_begin (); c_it != meshwhole->cells_end (); ++c_it){
-		auto pt = meshwhole->barycenter (*c_it);
-		point_containment pc;
-		api_point_in_body (POS2SPA(pt), body, pc);
-		if (pc == point_inside) continue;
-		out_body_chs.insert (*c_it);
-	}
-	std::unordered_set<OvmFaH> out_body_bound_fhs;
-	foreach (auto &ch, out_body_chs){
-		auto hfh_vec = meshwhole->cell (ch).halffaces ();
-		foreach (auto &hfh, hfh_vec){
-			auto fh = meshwhole->face_handle (hfh);
-			if (JC::contains (out_body_bound_fhs, fh))
-				out_body_bound_fhs.erase (fh);
-			else
-				out_body_bound_fhs.insert (fh);
-		}
-	}
-
-	std::unordered_set<OvmEgH> out_body_bound_ehs;
-	foreach (auto &fh, out_body_bound_fhs){
-		auto heh_vec = meshwhole->face (fh).halfedges ();
-		foreach (auto &heh, heh_vec){
-			auto eh = meshwhole->edge_handle (heh);
-			out_body_bound_ehs.insert (eh);
-		}
-	}
-
-	auto fRenderWorker = [&] (VolumeMesh *m, std::unordered_set<OvmVeH> &vs, 
-		std::unordered_set<OvmEgH> &es, std::unordered_set<OvmFaH> &fs){
-			HC_Open_Segment ("meshvertices");{
-				foreach (auto vh, vs){
-					auto pt = m->vertex (vh);
-					HC_Insert_Marker (pt[0], pt[1], pt[2]);
-				}
-			}HC_Close_Segment ();
-			HC_Open_Segment ("meshedges");{
-				//HC_Set_Visibility ("lines=off,edges=off,faces=off");
-				HC_Set_Line_Weight (2);
-				foreach (auto eh, es){
-					auto eg = m->edge (eh);
-					auto pt1 = m->vertex (eg.from_vertex ()), pt2 = m->vertex (eg.to_vertex ());
-					HC_Insert_Line (pt1[0], pt1[1], pt1[2], pt2[0], pt2[1], pt2[2]);
-				}
-			}HC_Close_Segment ();
-			HC_Open_Segment ("meshfaces");{
-				foreach (auto fh, fs){
-					auto hfh = m->halfface_handle (fh, 0);
-					if (!m->is_boundary (hfh))
-						hfh = m->opposite_halfface_handle (hfh);
-
-					QVector<HPoint> pts;
-					for (auto fv_it = m->hfv_iter (hfh); fv_it; ++fv_it)
-					{
-						auto pt = m->vertex (*fv_it);
-						pts.push_back (HPoint (pt[0], pt[1], pt[2]));
-					}
-					HC_Insert_Polygon (pts.size (), pts.data ());
-				}
-			}HC_Close_Segment ();
-	};
-	//flush all the contents in this segment using wild cards
-	HC_Flush_Segment ("...");
-	fRenderWorker (meshwhole, std::unordered_set<OvmVeH>(), out_body_bound_ehs, out_body_bound_fhs);
-}
 
 VolumeMesh *combine_meshes (VolumeMesh *mesh1, VolumeMesh *mesh2, std::unordered_set<OvmCeH> &chs)
 {
@@ -160,7 +95,7 @@ VolumeMesh *combine_meshes (VolumeMesh *mesh1, VolumeMesh *mesh2, std::unordered
 
 void ManualMeshMatchWidget::on_open2 ()
 {
-	dir_str = QFileDialog::getExistingDirectory (this, tr("Ñ¡ÔñÄ£ĞÍËùÔÚÎÄ¼ş¼Ğ"));
+	dir_str = QFileDialog::getExistingDirectory (this, tr("é€‰æ‹©æ¨¡å‹æ‰€åœ¨æ–‡ä»¶å¤¹"));
 	auto fGetLeftChs = [] (VolumeMesh *whole_mesh, BODY *match_body)->std::unordered_set<OvmCeH>{
 		std::unordered_set<OvmCeH> left_chs;
 		for (auto c_it = whole_mesh->cells_begin (); c_it != whole_mesh->cells_end (); ++c_it){
@@ -194,7 +129,7 @@ void ManualMeshMatchWidget::on_open2 ()
 		//	if (!JC::contains (cylinder_chs, *c_it))
 		//		block_chs.insert (*c_it);
 		//}
-		
+
 		//QMessageBox::information (this, "INFO", QString("cy %1 bl %2").arg (cylinder_chs.size ()).arg (block_chs.size ()));
 		//common_interface = get_interface ();
 
@@ -204,7 +139,7 @@ void ManualMeshMatchWidget::on_open2 ()
 				HC_Set_Color ("faces=green");
 				//HC_Translate_Object (0, 10, 0);
 				//JC::render_volume_mesh_boundary (mesh1);
-				
+
 				JC::render_volume_mesh (cy_mesh);
 			}HC_Close_Segment ();
 			mesh2key = HC_Open_Segment ("");{
@@ -254,17 +189,18 @@ void ManualMeshMatchWidget::on_open2 ()
 
 void ManualMeshMatchWidget::on_open ()
 {
-	dir_str = QFileDialog::getExistingDirectory (this, tr("Ñ¡ÔñÄ£ĞÍËùÔÚÎÄ¼ş¼Ğ"));
+	dir_str = QFileDialog::getExistingDirectory (this, tr("é€‰æ‹©æ¨¡å‹æ‰€åœ¨æ–‡ä»¶å¤¹"));
 
 	if (dir_str != ""){
 		QString part1mesh = dir_str + "\\part1.ovm",
 			part1body = dir_str + "\\part1.sat",
 			part2mesh = dir_str + "\\part2.ovm",
-			part2body = dir_str + "\\part2.sat";
+			part2body = dir_str + "\\part2.sat",
+			chord_pairs_path = dir_str + "\\matched_chord_pairs.dat";
 
 		QFileInfo fi1 (part1mesh), fi2 (part1body), fi3 (part2mesh), fi4 (part2body);
 		if (!fi1.exists () || !fi2.exists () || !fi3.exists () || !fi4.exists ()){
-			QMessageBox::warning (this, "´íÎó", "´ò²»¿ªÎÄ¼ş£¡");
+			QMessageBox::warning (this, tr("é”™è¯¯"), tr("æ‰“ä¸å¼€æ–‡ä»¶ï¼"));
 			return;
 		}
 
@@ -272,10 +208,14 @@ void ManualMeshMatchWidget::on_open ()
 		body1 = JC::load_acis_model (part1body);
 		mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
 		body2 = JC::load_acis_model (part2body);
-		
+
+		if (mesh1->vertex_property_exists <unsigned long> ("entityptr")){
+			QMessageBox::critical (this, "OK", "property existsï¼");
+			return;
+		}
 		all_interfaces = get_interfaces ();
 		if (all_interfaces.empty ()){
-			QMessageBox::critical (this, "´íÎó", "Á½¸öÄ£ĞÍÃ»ÓĞÌùºÏ²¿·Ö£¡");
+			QMessageBox::critical (this, "é”™è¯¯", "ä¸¤ä¸ªæ¨¡å‹æ²¡æœ‰è´´åˆéƒ¨åˆ†ï¼");
 			delete mesh1; delete  mesh2;
 			mesh1 = mesh2 = NULL;
 			return;
@@ -289,6 +229,7 @@ void ManualMeshMatchWidget::on_open ()
 			intf_list1.add (p.first); intf_list2.add (p.second);
 			common_interfaces.insert (p.first);
 		}
+
 
 		auto fSetupHoopsView = [&](MeshEditController *mc, HoopsView *hv, VolumeMesh *mesh, BODY *body, std::set<FACE*> intf){
 			HC_KEY mesh_key = INVALID_KEY;
@@ -393,6 +334,25 @@ void ManualMeshMatchWidget::on_open ()
 		fSetupHoopsView (mesh_edit_controller1, hoopsview1, mesh1, body1, interfaces1);
 		fSetupHoopsView (mesh_edit_controller2, hoopsview2, mesh2, body2, interfaces2);
 
+
+		mm_handler->set_interfaces (common_interfaces);
+		mm_handler->set_part1 (mesh1, JC::get_fhs_on_acis_faces (mesh1, interfaces1));
+		mm_handler->set_part2 (mesh2, JC::get_fhs_on_acis_faces (mesh2, interfaces2));
+		//debug
+		mm_handler->set_hoopsview1 (hoopsview1);
+		mm_handler->set_hoopsview2 (hoopsview2);
+
+		QFileInfo matched_chord_pairs_file (chord_pairs_path);
+		if (matched_chord_pairs_file.exists ()){
+			if (!mm_handler->load_matched_chords (chord_pairs_path)){
+				QMessageBox::warning (this, tr("é”™è¯¯"), tr("chordåŒ¹é…æ–‡ä»¶å­˜åœ¨ä½†æ˜¯è¯»å–é”™è¯¯ï¼"));
+				//for(;;) 
+					//mm_handler->load_matched_chords (chord_pairs_path);
+			}else{
+				draw_matched_chords (mm_handler->matched_chord_pairs);
+			}
+		}
+
 		//QString sta = QString ("Hex1:%1 Hex2:%2").arg (mesh1->n_cells ()).arg (mesh2->n_cells ());
 		//QMessageBox::information (this, "INFO", sta);
 
@@ -455,54 +415,42 @@ void ManualMeshMatchWidget::on_open ()
 	}
 }
 
-void ManualMeshMatchWidget::on_see_only_left ()
+void ManualMeshMatchWidget::on_show_left ()
 {
-	hoopsview1->show ();
-	mesh_edit_controller1->show ();
+	if (ui.cb_Show_Left_Side->isChecked ()){
+		hoopsview1->show ();
+		mesh_edit_controller1->show ();
+	}else{
+		hoopsview1->hide ();
+		mesh_edit_controller1->hide ();
+	}
+
+}
+
+void ManualMeshMatchWidget::on_show_right ()
+{
+	if (ui.cb_Show_Right_Side->isChecked ()){
+		hoopsview2->show ();
+		mesh_edit_controller2->show ();
+	}else{
+		hoopsview2->hide ();
 		mesh_edit_controller2->hide ();
-	hoopsview2->hide ();
+	}
 }
 
 void ManualMeshMatchWidget::on_init_matching ()
 {
-	if (mm_handler) delete mm_handler;
-	MMData data1, data2;
-	data1.inter_patch = mesh_edit_controller1->get_interface_quads ();
-	data2.inter_patch = mesh_edit_controller2->get_interface_quads ();
-	data1.mesh = mesh1; data2.mesh = mesh2;
-	mm_handler = new MeshMatchingHandler (&data1, &data2, common_interfaces);
 	mm_handler->init_match ();
+	
+	unmatched_chords1 = mm_handler->unmatched_chord_set1;
+	unmatched_chords2 = mm_handler->unmatched_chord_set2;
 
-	matched_chord_pairs = mm_handler->matched_chord_pairs;
-
-	unmatched_chords1 = mm_handler->chord_set1;
-	unmatched_chords2 = mm_handler->chord_set2;
-
-	draw_matched_chords (matched_chord_pairs);
+	draw_matched_chords (mm_handler->matched_chord_pairs);
 }
 
 void ManualMeshMatchWidget::on_update_matched_chords ()
 {
-	unmatched_chords1.clear ();
-	unmatched_chords2.clear ();
-	JC::retrieve_chords (mesh1, interface_fhs1, unmatched_chords1);
-	JC::retrieve_chords (mesh2, interface_fhs2, unmatched_chords2);
-
-	auto bk_matched_chord_pairs = matched_chord_pairs;
-	matched_chord_pairs.clear ();
-	foreach (auto &p, bk_matched_chord_pairs){
-		auto locate1 = unmatched_chords1.find (p.first);
-		auto locate2 = unmatched_chords2.find (p.second);
-
-		if (locate1 != unmatched_chords1.end () &&
-			locate2 != unmatched_chords2.end ()){
-				unmatched_chords1.erase (p.first);
-				unmatched_chords2.erase (p.second);
-				matched_chord_pairs.insert (p);
-		}
-	}
-
-	draw_matched_chords (matched_chord_pairs);
+	draw_matched_chords (mm_handler->matched_chord_pairs);
 }
 
 bool face_coincident (FACE *f1, FACE *f2, double myresabs)
@@ -574,7 +522,7 @@ std::set<std::pair<FACE *, FACE*> > ManualMeshMatchWidget::get_interfaces ()
 	logical is_touch;
 	api_entity_entity_touch (body1, body2, is_touch);
 	if (is_touch == FALSE){
-		QMessageBox::warning (this, "´íÎó", "Á½¸öÄ£ĞÍÃ»ÓĞ½Ó´¥Ãæ£¡");
+		QMessageBox::warning (this, "é”™è¯¯", "ä¸¤ä¸ªæ¨¡å‹æ²¡æœ‰æ¥è§¦é¢ï¼");
 		return interfaces;
 	}
 	BoolOptions boolopts;
@@ -596,54 +544,34 @@ std::set<std::pair<FACE *, FACE*> > ManualMeshMatchWidget::get_interfaces ()
 	return interfaces;
 }
 
-void ManualMeshMatchWidget::draw_matched_chords (ChordPairs &matched_chord_pairs)
-{
-	hoopsview1->derender_all_chords ();
-	hoopsview2->derender_all_chords ();
-	char *colors[] = {
-		"red", "blue", "pink", "yellow", "black", "magenta", "dark green", "orange red",
-		"violet blue","cerulean", "tangerine", "periwinkle"
-	};
-	int i = 0;
-	foreach (auto &p, matched_chord_pairs){
-		//hoopsview1->render_chord (p.first, "red", 4);
-		//hoopsview2->render_chord (p.second, "red", 4);
-		//hoopsview1->render_chord (p.first, colors[i % 12], 6);
-		//hoopsview2->render_chord (p.second, colors[i % 12], 6);
-		hoopsview1->render_chord (p.first, "green", 6);
-		hoopsview2->render_chord (p.second, "green", 6);
-		i++;
-	}
-}
+
 
 void ManualMeshMatchWidget::on_match_two_chords ()
 {
 	DualChord *chord1 = mesh_edit_controller1->get_selected_chord (),
 		*chord2 = mesh_edit_controller2->get_selected_chord ();
 	if (chord1 == NULL || chord2 == NULL){
-		QMessageBox::warning (this, "´íÎó", "±ØĞëÑ¡ÖĞÁ½Ìõchord£¡");
+		QMessageBox::warning (this, "é”™è¯¯", "å¿…é¡»é€‰ä¸­ä¸¤æ¡chordï¼");
 		return;
 	}
-	hoopsview1->derender_chord (chord1);
-	hoopsview2->derender_chord (chord2);
-	matched_chord_pairs.insert (std::make_pair (chord1,chord2));
+
+	if (!mm_handler->add_two_matched_chords (chord1, chord2)){
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("è¿™ä¸¤æ¡chordä¸èƒ½å¤ŸåŒ¹é…ï¼"));
+		return;
+	}else{
+		hoopsview1->derender_chord (chord1);
+		hoopsview2->derender_chord (chord2);
+		draw_matched_chords (mm_handler->matched_chord_pairs);
+	}
 }
 
 void ManualMeshMatchWidget::on_check_match ()
 {
-	//if (mm_handler) delete mm_handler;
-	////get_interface_quads (); 
-	//MMData data1, data2;
-	//data1.inter_patch = interface_fhs1;
-	//data2.inter_patch = interface_fhs2;
-	//data1.mesh = mesh1; data2.mesh = mesh2;
-	//mm_handler = new MeshMatchingHandler (&data1, &data2, common_interface);
-	//mm_handler->matched_chord_pairs = matched_chord_pairs;
-	//if (mm_handler->check_match ()){
-	//	QMessageBox::information (this, "ÌáÊ¾", "¿ÉÒÔÆ¥Åä£¡");
-	//}else{
-	//	QMessageBox::warning (this, "ÌáÊ¾", "²»ÄÜÆ¥Åä£¡");
-	//}
+	if (mm_handler->check_match ()){
+		QMessageBox::information (this, "æç¤º", "å¯ä»¥åŒ¹é…ï¼");
+	}else{
+		QMessageBox::warning (this, "æç¤º", "ä¸èƒ½åŒ¹é…ï¼");
+	}
 
 }
 
@@ -655,7 +583,7 @@ void ManualMeshMatchWidget::on_show_interface ()
 
 void ManualMeshMatchWidget::on_show_chord_pairs ()
 {
-	chord_match_widget->set_matched_pairs (matched_chord_pairs);
+	chord_match_widget->set_matched_pairs (mm_handler->matched_chord_pairs);
 	chord_match_widget->show ();
 }
 
@@ -666,15 +594,43 @@ void ManualMeshMatchWidget::on_highlight_chord_pair (uint chord_ptr1, uint chord
 	if (prev_sel_chord1 && prev_sel_chord2){
 		hoopsview1->derender_chord (prev_sel_chord1);
 		hoopsview2->derender_chord (prev_sel_chord2);
-		hoopsview1->render_chord (prev_sel_chord1, "yellow", 2);
-		hoopsview2->render_chord (prev_sel_chord2, "pink", 2);
+		hoopsview1->render_chord (prev_sel_chord1, "green", 3);
+		hoopsview2->render_chord (prev_sel_chord2, "green", 3);
 	}
 	hoopsview1->derender_chord (chord1);
 	hoopsview2->derender_chord (chord2);
 	prev_sel_chord1 = chord1; prev_sel_chord2 = chord2;
 
-	hoopsview1->render_chord (chord1, "green", 4);
-	hoopsview2->render_chord (chord2, "green", 4);
+	hoopsview1->render_chord (chord1, "yellow", 6);
+	hoopsview2->render_chord (chord2, "yellow", 6);
+
+	hoopsview1->derender_mesh_groups ("tmp", "ordered ehs");
+	hoopsview2->derender_mesh_groups ("tmp", "ordered ehs");
+	auto group = new VolumeMeshElementGroup (chord1->mesh, "tmp", "ordered ehs");
+	group->ehs.insert (chord1->ordered_ehs.front ());
+
+	MeshRenderOptions render_options;
+	render_options.edge_color = "red";
+	render_options.edge_width = 12;
+	hoopsview1->render_mesh_group (group, render_options);
+	
+	group = new VolumeMeshElementGroup (chord1->mesh, "tmp", "ordered ehs");
+	group->ehs.insert (chord1->ordered_ehs[1]);
+
+	render_options.edge_color = "blue";
+	hoopsview1->render_mesh_group (group, render_options);
+
+	group = new VolumeMeshElementGroup (chord2->mesh, "tmp", "ordered ehs");
+	group->ehs.insert (chord2->ordered_ehs.front ());
+
+	render_options.edge_color = "red";
+	hoopsview2->render_mesh_group (group, render_options);
+
+	group = new VolumeMeshElementGroup (chord2->mesh, "tmp", "ordered ehs");
+	group->ehs.insert (chord2->ordered_ehs[1]);
+
+	render_options.edge_color = "blue";
+	hoopsview2->render_mesh_group (group, render_options);
 }
 
 void ManualMeshMatchWidget::on_delete_chord_pair (uint chord_ptr1, uint chord_ptr2)
@@ -683,7 +639,10 @@ void ManualMeshMatchWidget::on_delete_chord_pair (uint chord_ptr1, uint chord_pt
 		*chord2 = (DualChord*)chord_ptr2;
 	hoopsview1->derender_chord (chord1);
 	hoopsview2->derender_chord (chord2);
-	matched_chord_pairs.erase (std::make_pair (chord1, chord2));
+	mm_handler->matched_chord_pairs.erase (std::make_pair (chord1, chord2));
+	prev_sel_chord1 = NULL;
+	prev_sel_chord2 = NULL;
+	draw_matched_chords (mm_handler->matched_chord_pairs);
 }
 
 void ManualMeshMatchWidget::on_close_chord_pair_widget ()
@@ -691,84 +650,35 @@ void ManualMeshMatchWidget::on_close_chord_pair_widget ()
 	if (prev_sel_chord1 && prev_sel_chord2){
 		hoopsview1->derender_chord (prev_sel_chord1);
 		hoopsview2->derender_chord (prev_sel_chord2);
-		hoopsview1->render_chord (prev_sel_chord1, "yellow", 2);
-		hoopsview2->render_chord (prev_sel_chord2, "pink", 2);
+		hoopsview1->render_chord (prev_sel_chord1, "green", 3);
+		hoopsview2->render_chord (prev_sel_chord2, "green", 3);
 	}
 	prev_sel_chord1 = prev_sel_chord2 = NULL;
 }
 
 void ManualMeshMatchWidget::on_save ()
 {
-	QDir dir;
-	QString dir_name = QInputDialog::getText (this, 
-		"Ä¿Â¼Ãû×Ö", "ÊäÈë±£´æÄ¿Â¼Ãû×Ö");
-	if (dir_name == "") return;
-	while (dir.exists ("../testdata/" + dir_name)){
-		dir_name = QInputDialog::getText (this, 
-			"Ä¿Â¼Ãû×Ö", "Ä¿Â¼Ãû×ÖÒÑ¾­´æÔÚ£¡ÊäÈë±£´æÄ¿Â¼Ãû×Ö");
-		if (dir_name == "") return;
+	auto dir_path = QFileDialog::getExistingDirectory (this, tr("é€‰æ‹©ç›®å½•"), tr("è¯·é€‰æ‹©è¦ä¿å­˜çš„ç›®å½•"));
+	while (QDir(dir_path).entryInfoList (QDir::NoDotAndDotDot|QDir::AllEntries).count () != 0){
+		QMessageBox::warning (this, tr("é”™è¯¯"), tr("é€‰æ‹©çš„ç›®å½•ä¸ä¸ºç©ºï¼è¯·é€‰æ‹©ä¸€ä¸ªç©ºæ–‡ä»¶å¤¹ï¼"));
+		dir_path = QFileDialog::getExistingDirectory (this, tr("é€‰æ‹©ç›®å½•"), tr("è¯·é€‰æ‹©è¦ä¿å­˜çš„ç›®å½•"));
 	}
 
-	bool ok = dir.mkdir ("../testdata/" + dir_name);
-	if (!ok){
-		QMessageBox::warning (this, "´íÎó", "´´½¨ÎÄ¼ş¼ĞÊ§°Ü£¡");
-		return;
-	}
-	JC::save_volume_mesh (mesh1, "../testdata/" + dir_name + "/part1.ovm");
-	JC::save_volume_mesh (mesh2, "../testdata/" + dir_name + "/part2.ovm");
-	JC::save_acis_entity (body1, 
-		QString("../testdata/" + dir_name + "/part1.sat")
+
+	JC::save_volume_mesh (mesh1, dir_path + "/part1.ovm");
+	JC::save_volume_mesh (mesh2, dir_path + "/part2.ovm");
+	JC::save_acis_entity (body1, QString(dir_path + "/part1.sat")
 		.toAscii ().data ());
-	JC::save_acis_entity (body2, 
-		QString("../testdata/" + dir_name + "/part2.sat")
+	JC::save_acis_entity (body2, QString(dir_path + "/part2.sat")
 		.toAscii ().data ());
-	QMessageBox::information (this, "ÌáĞÑ", "±£´æ³É¹¦£¡");
+
+	mm_handler->save_matched_chords (dir_path + "/matched_chord_pairs.dat");
+	QMessageBox::information (this, tr("æé†’"), tr("ä¿å­˜æˆåŠŸï¼"));
 }
 
 DualChord *ManualMeshMatchWidget::get_matched_chord (DualChord *chord)
 {
-	foreach (auto &p, matched_chord_pairs){
-		if (p.first == chord) return p.second;
-		else if (p.second == chord) return p.first;
-	}
-	return NULL;
-}
-
-std::vector<DualChord*> ManualMeshMatchWidget::get_intersect_seq (DualChord *chord, bool &self_int)
-{
-	std::vector<DualChord*> int_seq;
-	ChordPairs reversed_matched_chord_pairs;
-	foreach (auto &p, matched_chord_pairs)
-		reversed_matched_chord_pairs.insert (std::make_pair (p.second, p.first));
-	self_int = false;
-
-	auto fGetIntSeq = [&] (VolumeMesh *mesh, ChordPairs & cp, std::vector<DualChord*> &is){
-		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
-		foreach (auto &fh, chord->ordered_fhs){
-			auto heh_vec = mesh->face (fh).halfedges ();
-			std::set<DualChord*> chords;
-			foreach (auto &heh, heh_vec){
-				auto eh = mesh->edge_handle (heh);
-				DualChord *tmp_chord = (DualChord*)(E_CHORD_PTR[eh]);
-				assert (tmp_chord);
-				chords.insert (tmp_chord);
-			}
-			assert (chords.size () <= 2);
-			if (chords.size () == 1){
-				is.push_back (NULL);
-				self_int = true;
-			}else if (chords.size () == 2){
-				chords.erase (chord);
-				is.push_back (*(chords.begin ()));
-			}else
-				assert (false);
-		}
-	};
-	if (chord->mesh == mesh1)
-		fGetIntSeq (mesh1, matched_chord_pairs, int_seq);
-	else
-		fGetIntSeq (mesh2, reversed_matched_chord_pairs, int_seq);
-	return int_seq;
+	return mm_handler->get_matched_chord (chord);
 }
 
 void ManualMeshMatchWidget::on_get_polyline ()
@@ -776,37 +686,61 @@ void ManualMeshMatchWidget::on_get_polyline ()
 	DualChord *chord1 = mesh_edit_controller1->get_selected_chord (),
 		*chord2 = mesh_edit_controller2->get_selected_chord ();
 	if (chord1 && chord2){
-		QMessageBox::warning (this, "´íÎó", "²»ÄÜÁ½±ßÍ¬Ê±Ñ¡ÖĞ£¡");
+		QMessageBox::warning (this, "é”™è¯¯", "ä¸èƒ½ä¸¤è¾¹åŒæ—¶é€‰ä¸­ï¼");
 		return;
 	}
-	auto fGetPolyline = [&] (VolumeMesh *mesh_from, DualChord *chord, VolumeMesh *mesh_to)->std::vector<OvmEgH>{
-		//»ñµÃÏà½»ĞòÁĞ
-		bool self_int;
-		auto int_seq = get_intersect_seq (chord, self_int);
+	auto chord_to_match = chord1? chord1 : chord2;
+	auto hoopsview_to_draw = chord1? hoopsview2 : hoopsview1;
+	auto mesh = chord1? mesh2 : mesh1;
 
-		std::vector<DualChord*> trans_int_seq;
-		int self_int_count = 0;
-		foreach (auto &int_chord, int_seq){
-			if (int_chord == NULL){
-				self_int_count++;
-				if (self_int_count == 2)
-					trans_int_seq.push_back (NULL);
-				else if (self_int_count > 2)
-					assert (false);
-			}
-			else{
-				auto trans_chord = get_matched_chord (int_chord);
-				assert (trans_chord);
-				trans_int_seq.push_back (trans_chord);
-			}
-		}
+	auto cpd = mm_handler->get_chord_pos_desc (chord_to_match);
+	auto trans_cpd = mm_handler->translate_chord_pos_desc (cpd);
 
-		//»ñµÃÆğÊ¼ºòÑ¡µãºÍÖÕÖ¹ºòÑ¡µã
-		//auto E_INT_EG_PTR = mesh->request_edge_property<unsigned long> ("intedgeptr");
-		//auto start_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.front ()]);
-		//auto end_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.back ()]);
+	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate start geom vertices");
+	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate end geom vertices");
 
-	};
+	MeshRenderOptions render_options;
+
+	if (!chord_to_match->is_closed){
+		auto candidate_vertices = mm_handler->get_candidate_end_geom_vertices (trans_cpd);
+		auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate start geom vertices");
+		foreach (auto vh, candidate_vertices.first)
+			group->vhs.insert (vh);
+
+		
+		render_options.vertex_color = "blue";
+		render_options.vertex_size = 1.0;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
+
+		group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate end geom vertices");
+		foreach (auto vh, candidate_vertices.second)
+			group->vhs.insert (vh);
+
+		render_options.vertex_color = "red";
+		render_options.vertex_size = 1.0;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
+	}
+	auto interval_ehs = mm_handler->get_candidate_interval_ehs (trans_cpd);
+
+	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate interval ehs");
+
+
+	
+
+	foreach (auto ehs, interval_ehs){
+		auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate interval ehs");
+		foreach (auto eh, ehs)
+			group->ehs.insert (eh);
+
+		render_options.edge_color = "pink";
+		render_options.edge_width = 6;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+		hoopsview_to_draw->set_mesh_group_selectability (group, false, true, false);
+	}
+
+	hoopsview_to_draw->show_mesh_faces (true);
 }
 
 void ManualMeshMatchWidget::on_auto_match ()
@@ -902,4 +836,24 @@ void ManualMeshMatchWidget::on_merge ()
 	hoopsview1->GetHoopsView ()->Update ();
 
 	hoopsview2->hide ();
+}
+
+void ManualMeshMatchWidget::draw_matched_chords (ChordPairs &matched_chord_pairs)
+{
+	hoopsview1->derender_all_chords ();
+	hoopsview2->derender_all_chords ();
+	char *colors[] = {
+		"red", "blue", "pink", "yellow", "black", "magenta", "dark green", "orange red",
+		"violet blue","cerulean", "tangerine", "periwinkle"
+	};
+	int i = 0;
+	foreach (auto &p, matched_chord_pairs){
+		//hoopsview1->render_chord (p.first, "red", 4);
+		//hoopsview2->render_chord (p.second, "red", 4);
+		//hoopsview1->render_chord (p.first, colors[i % 12], 6);
+		//hoopsview2->render_chord (p.second, colors[i % 12], 6);
+		hoopsview1->render_chord (p.first, "green", 3);
+		hoopsview2->render_chord (p.second, "green", 3);
+		i++;
+	}
 }

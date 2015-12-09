@@ -1,7 +1,10 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "MeshMatchingHandler.h"
 #include <limits>
 #include "polysim.h"
+#include <QFile>
+#include <QDataStream>
+#include <QObject>
 
 namespace MM{
 	void adjust_interface_bondary (VolumeMesh *mesh, std::unordered_set<OvmFaH> &inter_fhs, std::set<FACE *> interfaces)
@@ -11,7 +14,7 @@ namespace MM{
 
 		JC::get_boundary_elements_of_faces_patch (mesh, inter_fhs, bound_vhs, bound_ehs);
 
-		//Ê×ÏÈµ÷Õûµã£¬°ÑÒ»Ğ©Íø¸ñµãÒÆµ½¼¯ºÏµãÉÏ
+		//é¦–å…ˆè°ƒæ•´ç‚¹ï¼ŒæŠŠä¸€äº›ç½‘æ ¼ç‚¹ç§»åˆ°é›†åˆç‚¹ä¸Š
 		std::set<ENTITY*> vertices_list, edges_list_used;
 		foreach (auto f, interfaces){
 			ENTITY_LIST tmp_edges_list;
@@ -293,8 +296,8 @@ namespace MM{
 MeshMatchingHandler::MeshMatchingHandler (MMData *_data1, MMData *_data2, std::set<FACE *> _interfaces)
 	: mm_data1 (_data1), mm_data2 (_data2), interfaces (_interfaces)
 {
-	JC::retrieve_chords (mm_data1->mesh, mm_data1->inter_patch, chord_set1);
-	JC::retrieve_chords (mm_data2->mesh, mm_data2->inter_patch, chord_set2);
+	JC::retrieve_chords (mm_data1->mesh, mm_data1->inter_patch, unmatched_chord_set1);
+	JC::retrieve_chords (mm_data2->mesh, mm_data2->inter_patch, unmatched_chord_set2);
 	myresabs = SPAresabs * 10000;
 
 	get_all_ehs_on_interface (mm_data1);get_all_ehs_on_interface (mm_data2);
@@ -302,19 +305,201 @@ MeshMatchingHandler::MeshMatchingHandler (MMData *_data1, MMData *_data2, std::s
 	attach_interface_entity_to_mesh (mm_data2);
 }
 
+MeshMatchingHandler::MeshMatchingHandler ()
+{
+	mm_data1 = NULL;
+	mm_data2 = NULL;
+	myresabs = SPAresabs * 10000;
+}
+
+MeshMatchingHandler::~MeshMatchingHandler ()
+{
+	if (mm_data1)
+		delete mm_data1;
+	if (mm_data2)
+		delete mm_data2;
+}
+
+void MeshMatchingHandler::set_interfaces (std::set<FACE *> _interface)
+{
+	interfaces = _interface;
+}
+
+void MeshMatchingHandler::set_part1 (VolumeMesh *mesh, std::unordered_set<OvmFaH> inf_qs)
+{
+	if (mm_data1)
+		delete mm_data1;
+	mm_data1 = new MMData;
+	mm_data1->mesh = mesh;
+	mm_data1->inter_patch = inf_qs;
+	unmatched_chord_set1.clear ();
+	JC::retrieve_chords (mm_data1->mesh, mm_data1->inter_patch, unmatched_chord_set1);
+	get_all_ehs_on_interface (mm_data1);
+	attach_interface_entity_to_mesh (mm_data1);
+}
+
+void MeshMatchingHandler::set_part2 (VolumeMesh *mesh, std::unordered_set<OvmFaH> inf_qs)
+{
+	if (mm_data2)
+		delete mm_data2;
+	mm_data2 = new MMData;
+	mm_data2->mesh = mesh;
+	mm_data2->inter_patch = inf_qs;
+	unmatched_chord_set2.clear ();
+	JC::retrieve_chords (mm_data2->mesh, mm_data2->inter_patch, unmatched_chord_set2);
+	get_all_ehs_on_interface (mm_data2);
+	attach_interface_entity_to_mesh (mm_data2);
+}
+
+
+
+bool MeshMatchingHandler::add_two_matched_chords (DualChord *chord1, DualChord *chord2)
+{
+	if (!can_two_chords_match (chord1, chord2))
+		return false;
+	matched_chord_pairs.insert (std::make_pair (chord1, chord2));
+	unmatched_chord_set1.erase (chord1);
+	unmatched_chord_set2.erase (chord2);
+	adjust_matched_chords_directions ();
+	return true;
+}
+
 bool MeshMatchingHandler::check_match ()
 {
-	all_matched_chords.clear ();
-	foreach (auto &p, matched_chord_pairs){
-		all_matched_chords.insert (p.first);
-		all_matched_chords.insert (p.second);
-	}
 	foreach (auto &p, matched_chord_pairs){
 		if (!can_two_chords_match (p.first, p.second)){
 			can_two_chords_match (p.first, p.second);
 			return false;
 		}
 	}
+	return true;
+}
+
+bool MeshMatchingHandler::save_matched_chords (QString file_path)
+{
+	QFile file (file_path);
+	if (!file.open (QIODevice::WriteOnly)){
+		QMessageBox::warning (NULL, QObject::tr("é”™è¯¯"), QObject::tr("æ‰“å¼€æ–‡ä»¶é”™è¯¯ï¼"));
+		return false;
+	}
+	QDataStream out (&file);
+	//......chord pair...edges........quads.................edges........quads.......
+	QVector<QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > > converted_matched_chords_data;
+	foreach (auto p, matched_chord_pairs){
+		QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > one_pair_data;
+		foreach (auto eh, p.first->ordered_ehs)
+			one_pair_data.first.first.push_back (eh.idx ());
+		foreach (auto fh, p.first->ordered_fhs)
+			one_pair_data.first.second.push_back (fh.idx ());
+
+		foreach (auto eh, p.second->ordered_ehs)
+			one_pair_data.second.first.push_back (eh.idx ());
+		foreach (auto fh, p.second->ordered_fhs)
+			one_pair_data.second.second.push_back (fh.idx ());
+
+		converted_matched_chords_data.push_back (one_pair_data);
+		
+		QString orig_str, now_str;
+		std::unordered_set<OvmEgH> new_ehs;
+		foreach (auto eh, p.second->ordered_ehs)
+			orig_str += QString ("a%1 ").arg (eh.idx ());
+		foreach (auto id, one_pair_data.second.first){
+			now_str += QString ("b%1 ").arg (id);
+			new_ehs.insert (OvmEgH (id));
+			if (!JC::contains (mm_data2->ehs_on_interface, OvmEgH (id))){
+				QMessageBox::information (NULL, "info", "ä¸åœ¨ehs_on_interfaceä¸­ï¼");
+			}
+		}
+
+		QMessageBox::information (NULL, "info", orig_str + "\n" + now_str);
+		hoopsview2->derender_chord (p.second);
+
+		MeshRenderOptions render_options;
+		auto group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
+		group->ehs = new_ehs;
+		render_options.edge_color = "blue";
+		render_options.edge_width = 6;
+		hoopsview2->render_mesh_group (group, render_options);
+	}
+	out<<converted_matched_chords_data;
+	file.close ();
+
+	return true;
+}
+
+bool MeshMatchingHandler::load_matched_chords (QString file_path)
+{
+	QFile file (file_path);
+	if (!file.open (QIODevice::ReadOnly)){
+		QMessageBox::warning (NULL, QObject::tr("é”™è¯¯"), QObject::tr("æ‰“å¼€æ–‡ä»¶é”™è¯¯ï¼"));
+		return false;
+	}
+	
+	QDataStream in (&file);
+	//......chord pair...edges.....quads..........edges........quads.......
+	QVector<QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > > converted_matched_chords_data;
+
+	in>>converted_matched_chords_data;
+	file.close ();
+
+	ChordPairs loaded_chord_pairs;
+	foreach (auto p, converted_matched_chords_data){
+		std::vector<OvmEgH> ordered_ehs1, ordered_ehs2;
+		std::vector<OvmFaH> ordered_fhs1, ordered_fhs2;
+		foreach (auto eh_idx, p.first.first)
+			ordered_ehs1.push_back (OvmEgH(eh_idx));
+		foreach (auto eh_idx, p.second.first)
+			ordered_ehs2.push_back (OvmEgH(eh_idx));
+
+		foreach (auto fh_idx, p.first.second)
+			ordered_fhs1.push_back (OvmFaH(fh_idx));
+		foreach (auto fh_idx, p.second.second)
+			ordered_fhs2.push_back (OvmFaH(fh_idx));
+
+		DualChord *chord1 = NULL, *chord2 = NULL;
+		foreach (auto chord, unmatched_chord_set1){
+			if (JC::contains (chord->ordered_ehs, ordered_ehs1.front ())){
+				chord1 = chord;
+				break;
+			}
+		}
+		foreach (auto chord, unmatched_chord_set2){
+			if (JC::contains (chord->ordered_ehs, ordered_ehs2.front ())){
+				chord2 = chord;
+				break;
+			}
+		}
+		if (chord2 == NULL){
+			if (!JC::contains (mm_data2->ehs_on_interface, ordered_ehs2.front ())){
+				QMessageBox::warning (NULL, QObject::tr("é”™è¯¯ï¼"), QString("eh %1 not on_interface!").arg (ordered_ehs2.front().idx ()));
+				MeshRenderOptions render_options;
+				auto group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
+				group->ehs = mm_data2->ehs_on_interface;
+				render_options.edge_color = "blue";
+				render_options.edge_width = 6;
+				hoopsview2->render_mesh_group (group, render_options);
+
+				group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
+				group->ehs.insert (ordered_ehs2.front ());
+				render_options.edge_color = "red";
+				render_options.edge_width = 12;
+				hoopsview2->render_mesh_group (group, render_options);
+				return false;
+			}
+		}
+
+		if (chord1 == NULL || chord2 == NULL){
+			QMessageBox::warning (NULL, QObject::tr("é”™è¯¯ï¼"), QObject::tr("è¯¥chordåœ¨å½“å‰æ¨¡å‹ä¸Šä¸å­˜åœ¨ï¼"));
+			return false;
+		}
+
+		//å°†chord1å’Œchord2ä¸­çš„è¾¹å’Œé¢è®¾ç½®ä¸ºè¯»å–è¿›æ¥çš„è¾¹ã€é¢åºåˆ—
+		unmatched_chord_set1.erase (chord1);
+		unmatched_chord_set2.erase (chord2);
+		loaded_chord_pairs.insert (std::make_pair (chord1, chord2));
+	}
+	matched_chord_pairs.clear ();
+	matched_chord_pairs = loaded_chord_pairs;
 	return true;
 }
 
@@ -332,7 +517,7 @@ void MeshMatchingHandler::get_all_ehs_on_interface (MMData *mm_data)
 
 void MeshMatchingHandler::attach_interface_entity_to_mesh (MMData *mm_data)
 {
-	//»ñµÃÄÇĞ©Î»ÓÚ±ß½çÉÏµÄ¼¸ºÎ±ß£¨ÒòÎªinterface¿ÉÄÜÓÉ¶à¸öÏàÁÚµÄ¼¸ºÎÃæ×é³É£©
+	//è·å¾—é‚£äº›ä½äºè¾¹ç•Œä¸Šçš„å‡ ä½•è¾¹ï¼ˆå› ä¸ºinterfaceå¯èƒ½ç”±å¤šä¸ªç›¸é‚»çš„å‡ ä½•é¢ç»„æˆï¼‰
 	std::set<ENTITY*> perip_edges_buff;
 	foreach (auto f, interfaces){
 		ENTITY_LIST tmp_edge_list;
@@ -391,17 +576,17 @@ void MeshMatchingHandler::init_match ()
 		DualChord *chord1, *chord2;
 		double dist;
 
-		//ÖØÔØ<ÔËËã·û£¬Ê¹Ö®ÄÜ¹»ÔÚSTL setÈİÆ÷ÖĞ×Ô¶¯ÅÅĞò
+		//é‡è½½<è¿ç®—ç¬¦ï¼Œä½¿ä¹‹èƒ½å¤Ÿåœ¨STL setå®¹å™¨ä¸­è‡ªåŠ¨æ’åº
 		bool operator < (const ChordPairCandidate &rhs_) const
 		{
 			return dist < rhs_.dist;
 		}
 	};
-	//¸ù¾İÁ½¸öchordµÄÆğÊ¼±ß¡¢Î§³ÉµÄ¶à±ßĞÎÀ´³õ²½ÅĞ¶ÏËûÃÇÄÜ·ñÆ¥Åä
-	//½«ÄÜÆ¥ÅäµÄ·ÅÈëcandidatesÊı×é
+	//æ ¹æ®ä¸¤ä¸ªchordçš„èµ·å§‹è¾¹ã€å›´æˆçš„å¤šè¾¹å½¢æ¥åˆæ­¥åˆ¤æ–­ä»–ä»¬èƒ½å¦åŒ¹é…
+	//å°†èƒ½åŒ¹é…çš„æ”¾å…¥candidatesæ•°ç»„
 	std::set<ChordPairCandidate> cpcs;
-	foreach (auto &chord1, chord_set1){
-		foreach (auto &chord2, chord_set2){
+	foreach (auto &chord1, unmatched_chord_set1){
+		foreach (auto &chord2, unmatched_chord_set2){
 			if (can_two_chords_match (chord1, chord2)){
 				auto polyline1 = get_chord_spa_polyline (chord1),
 					polyline2 = get_chord_spa_polyline (chord2);
@@ -413,70 +598,214 @@ void MeshMatchingHandler::init_match ()
 		}
 	}
 
-	//ÏÂÃæ´ÓcpcsÖĞÃ¿´ÎÈ¡³ödist×îĞ¡µÄcandidate£¬¼ÓÈëµ½matched_pairsÖĞ
-	//ºóĞø¼ÓÈëµÄĞèÒª½«Ö®Ç°Æ¥ÅäµÄchord¶Ô¿¼ÂÇÔÚÄÚ
+	//QString msg;
+	//DualChord *my_tmp_chord = NULL;
+	//foreach (auto c, chord_set1){
+	//	if (c->idx == 15){
+	//		my_tmp_chord = c;
+	//		break;
+	//	}
+	//}
+	//if (my_tmp_chord == NULL) return;
+	//foreach (auto &cpc, cpcs){
+	//	if (cpc.chord1 == my_tmp_chord){
+	//		msg += QString ("c%1: %2\n").arg (cpc.chord2->idx).arg (cpc.dist);
+	//	}
+	//}
+	//QMessageBox::information (NULL, "init match", msg);
+
+	//ä¸‹é¢ä»cpcsä¸­æ¯æ¬¡å–å‡ºdistæœ€å°çš„candidateï¼ŒåŠ å…¥åˆ°matched_pairsä¸­
+	//åç»­åŠ å…¥çš„éœ€è¦å°†ä¹‹å‰åŒ¹é…çš„chordå¯¹è€ƒè™‘åœ¨å†…
 	while (!cpcs.empty ()){
 		auto candidiate = JC::pop_begin_element (cpcs);
-		if (can_two_chords_match (candidiate.chord1, candidiate.chord2)){
-			matched_chord_pairs.insert (std::make_pair (candidiate.chord1, candidiate.chord2));
-			all_matched_chords.insert (candidiate.chord1);
-			all_matched_chords.insert (candidiate.chord2);
-
+		auto test_chord_pair = std::make_pair (candidiate.chord1, candidiate.chord2);
+		matched_chord_pairs.insert (test_chord_pair);
+		if (check_match ()){
 			for (auto it = cpcs.begin (); it != cpcs.end ();){
 				if (it->chord1 == candidiate.chord1 || it->chord2 == candidiate.chord2)
 					it = cpcs.erase (it);
 				else it++;
 			}
+			unmatched_chord_set1.erase (test_chord_pair.first);
+			unmatched_chord_set2.erase (test_chord_pair.second);
 		}else{
-			can_two_chords_match (candidiate.chord1, candidiate.chord2);
-			int i = 0;
-			i = i;
-			
+			matched_chord_pairs.erase (test_chord_pair);
 		}
 	}
+
+	adjust_matched_chords_directions ();
+}
+
+void MeshMatchingHandler::adjust_matched_chords_directions ()
+{
+	auto fAdjustChord = [&] (DualChord *chord){
+		chord->ordered_ehs.erase (chord->ordered_ehs.begin ());
+		chord->ordered_ehs.push_back (chord->ordered_ehs.front ());
+		chord->ordered_fhs.push_back (chord->ordered_fhs.front ());
+		chord->ordered_fhs.erase (chord->ordered_fhs.begin ());
+	};
+	foreach (auto p, matched_chord_pairs){
+		auto chord1 = p.first;
+		auto chord2 = p.second;
+		auto cpd1 = get_chord_pos_desc (chord1),
+			cpd2 = get_chord_pos_desc (chord2);
+
+		if (chord1->is_closed){
+			bool has_adjusted = false;
+			for (int i = 0; i != chord2->ordered_ehs.size (); ++i){
+				if (!can_two_int_graphs_match (chord1, cpd1.inter_graph, chord2, cpd2.inter_graph)){
+					fAdjustChord (chord2);
+					get_inter_graph (cpd2, chord2);
+				}else{
+					has_adjusted = true;
+					break;
+				}
+			}
+			if (!has_adjusted){
+				std::reverse (chord2->ordered_ehs.begin () + 1, chord2->ordered_ehs.end () - 1);
+				std::reverse (chord2->ordered_fhs.begin (), chord2->ordered_fhs.end ());
+				get_inter_graph (cpd2, chord2);
+				for (int i = 0; i != chord2->ordered_ehs.size (); ++i){
+					if (!can_two_int_graphs_match (chord1, cpd1.inter_graph, chord2, cpd2.inter_graph)){
+						fAdjustChord (chord2);
+						get_inter_graph (cpd2, chord2);
+					}else{
+						has_adjusted = true;
+						break;
+					}
+				}
+			}//end if (!has_adjusted){...
+			if (!has_adjusted){
+				QMessageBox::warning (NULL, "ERROR", QString ("Cannot be adjusted!c%1 <--> c%2").arg (chord1->idx).arg (chord2->idx));
+			}
+		}//end if (!p.first->is_closed){...
+	}
+}
+
+std::vector<DualChord*> MeshMatchingHandler::get_intersect_seq (DualChord *chord, bool &self_int)
+{
+	std::vector<DualChord*> int_seq;
+	ChordPairs reversed_matched_chord_pairs;
+	foreach (auto &p, matched_chord_pairs)
+		reversed_matched_chord_pairs.insert (std::make_pair (p.second, p.first));
+	self_int = false;
+
+	auto fGetIntSeq = [&] (VolumeMesh *mesh, ChordPairs & cp, std::vector<DualChord*> &is){
+		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+		foreach (auto &fh, chord->ordered_fhs){
+			auto heh_vec = mesh->face (fh).halfedges ();
+			std::set<DualChord*> chords;
+			foreach (auto &heh, heh_vec){
+				auto eh = mesh->edge_handle (heh);
+				DualChord *tmp_chord = (DualChord*)(E_CHORD_PTR[eh]);
+				assert (tmp_chord);
+				chords.insert (tmp_chord);
+			}
+			assert (chords.size () <= 2);
+			if (chords.size () == 1){
+				is.push_back (NULL);
+				self_int = true;
+			}else if (chords.size () == 2){
+				chords.erase (chord);
+				is.push_back (*(chords.begin ()));
+			}else
+				assert (false);
+		}
+	};
+	if (chord->mesh == mm_data1->mesh)
+		fGetIntSeq (mm_data1->mesh, matched_chord_pairs, int_seq);
+	else
+		fGetIntSeq (mm_data2->mesh, reversed_matched_chord_pairs, int_seq);
+	return int_seq;
+}
+
+std::pair<std::set<OvmVeH>, std::set<OvmVeH> > MeshMatchingHandler::get_candidate_end_geom_vertices (ChordPosDesc &translated_cpd)
+{
+	auto mesh = translated_cpd.mesh;
+	std::pair<std::set<OvmVeH>, std::set<OvmVeH> > candidate_vertices;
+	auto mm_data = get_mesh_matching_data (mesh);
+	auto ordered_ehs_on_start_geom_eg = mm_data->ordered_ehs_on_edges[translated_cpd.start_edge],
+		ordered_ehs_on_end_geom_eg = mm_data->ordered_ehs_on_edges[translated_cpd.end_edge];
+
+	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+
+	auto fGetCandidateVertices = [&] (std::vector<OvmEgH> &ordered_ehs_on_geom_eg, int interval_idx_want)->std::set<OvmVeH>{
+		std::set<OvmVeH> candi_vers;
+		std::vector<OvmHaEgH> directed_hehs;
+		JC::get_piecewise_halfedges_from_edges (mesh, ordered_ehs_on_geom_eg, true, directed_hehs);
+		if (interval_idx_want == 0)
+			candi_vers.insert (mesh->halfedge (directed_hehs.front ()).from_vertex ());
+		int interval_idx = 0;
+
+		foreach (auto heh, directed_hehs){
+			auto eh = mesh->edge_handle (heh);
+			DualChord *eh_chord = (DualChord*)(E_CHORD_PTR[eh]);
+			if (has_been_matched (eh_chord))
+				interval_idx++;
+			if (interval_idx == interval_idx_want)
+				candi_vers.insert (mesh->halfedge (heh).to_vertex ());
+			if (interval_idx > interval_idx_want)
+				break;
+		}
+		return candi_vers;
+	};
+
+	candidate_vertices.first = fGetCandidateVertices (ordered_ehs_on_start_geom_eg, translated_cpd.start_idx);
+	candidate_vertices.second = fGetCandidateVertices (ordered_ehs_on_end_geom_eg, translated_cpd.end_idx);
+	return candidate_vertices;
+}
+
+std::vector<std::set<OvmEgH> > MeshMatchingHandler::get_candidate_interval_ehs (ChordPosDesc &translated_cpd)
+{
+	std::vector<std::set<OvmEgH> > candidate_interval_ehs;
+	for (int i = 0; i != translated_cpd.inter_graph.size (); ++i){
+		auto int_chord = translated_cpd.inter_graph[i];
+		auto interval_idx_want = translated_cpd.inter_graph_indices[i];
+		int cur_interval_idx = 0;
+
+		std::set<OvmEgH> cur_candi_int_ehs;
+		if (interval_idx_want == 0)
+			cur_candi_int_ehs.insert (int_chord->ordered_ehs.front ());
+
+		for (int i = 1; i != int_chord->ordered_ehs.size (); ++i){
+			auto fh_on_int_chord = int_chord->ordered_fhs[i - 1];
+			auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
+			if (has_been_matched (int_chord_on_int_chord))
+				cur_interval_idx++;
+			if (cur_interval_idx == interval_idx_want)
+				cur_candi_int_ehs.insert (int_chord->ordered_ehs[i]);
+			if (cur_interval_idx > interval_idx_want)
+				break;
+		}
+
+		candidate_interval_ehs.push_back (cur_candi_int_ehs);
+	}
+
+	return candidate_interval_ehs;
 }
 
 bool MeshMatchingHandler::can_two_chords_match (DualChord *chord1, DualChord *chord2)
 {
-	//Á½¸öchordµÄÀàĞÍ±ØĞëÒ»ÖÂ
+	//ä¸¤ä¸ªchordçš„ç±»å‹å¿…é¡»ä¸€è‡´
 	if (chord1->is_closed != chord2->is_closed)
 		return false;
 
-	//»ñµÃchordÎ»ÖÃÃèÊö×Ó
-	auto cpd1 = get_chord_pos_desc (mm_data1, chord1),
-		cpd2 = get_chord_pos_desc (mm_data2, chord2);
+	//è·å¾—chordä½ç½®æè¿°å­
+	auto cpd1 = get_chord_pos_desc (chord1),
+		cpd2 = get_chord_pos_desc (chord2);
 
-	//Èç¹ûÏà½»ĞòÁĞ³¤¶È²»Ò»Ñù£¬ÄÇ¿Ï¶¨²»ÄÜÆ¥Åä
+	//å¦‚æœç›¸äº¤åºåˆ—é•¿åº¦ä¸ä¸€æ ·ï¼Œé‚£è‚¯å®šä¸èƒ½åŒ¹é…
 	if (cpd1.inter_graph.size () != cpd2.inter_graph.size ())
 		return false;
 
 	int graph_size = cpd1.inter_graph.size ();
 
-	//ÏÂÃæÖğ¸öÅĞ¶ÏÏà½»ĞòÁĞÖĞµÄchordÊÇ·ñÆ¥Åä
-
-	auto fSameIntGraph = [&] (std::vector<DualChord*> &int_graph1, std::vector<DualChord*> &int_graph2)->bool{
-		for (int i = 0; i != graph_size; ++i){
-			auto int_chord1 = int_graph1[i],
-				int_chord2 = int_graph2[i];
-			if (int_chord1 == chord1 || int_chord2 == chord2){
-				if (!(int_chord1 == chord1 && int_chord2 == chord2))
-					return false;
-			}
-			bool has_found = false;
-			foreach (auto &p, matched_chord_pairs){
-				if (p.first == int_chord1 && p.second == int_chord2){
-					has_found = true; break;
-				}
-			}
-			if (!has_found) return false;
-		}
-		return true;
-	};
+	//ä¸‹é¢é€ä¸ªåˆ¤æ–­ç›¸äº¤åºåˆ—ä¸­çš„chordæ˜¯å¦åŒ¹é…
 	if (chord1->is_closed){
 		if (graph_size == 0) return true;
 		bool same_circle = false;
 		for (int i = 0; i != graph_size; ++i){
-			if (fSameIntGraph (cpd1.inter_graph, cpd2.inter_graph)){
+			if (can_two_int_graphs_match (chord1, cpd1.inter_graph, chord2, cpd2.inter_graph)){
 				same_circle = true;
 				break;
 			}
@@ -486,8 +815,9 @@ bool MeshMatchingHandler::can_two_chords_match (DualChord *chord1, DualChord *ch
 		if (!same_circle){
 			std::reverse (cpd2.inter_graph.begin (), cpd2.inter_graph.end ());
 			for (int i = 0; i != graph_size; ++i){
-				if (fSameIntGraph (cpd1.inter_graph, cpd2.inter_graph)){
+				if (can_two_int_graphs_match (chord1, cpd1.inter_graph, chord2, cpd2.inter_graph)){
 					same_circle = true;
+
 					break;
 				}
 				auto front_chord2 = JC::pop_begin_element (cpd2.inter_graph);
@@ -498,29 +828,30 @@ bool MeshMatchingHandler::can_two_chords_match (DualChord *chord1, DualChord *ch
 	}else{
 		if (!(cpd1.start_edge == cpd2.start_edge && cpd1.end_edge == cpd2.end_edge))
 			return false;
-		//ÏÂÃæÅĞ¶ÏÆğÊ¼ºÍÖÕÖ¹±ßÉÏµÄÎ»ÖÃÊÇ·ñÒ»Ñù
+		//ä¸‹é¢åˆ¤æ–­èµ·å§‹å’Œç»ˆæ­¢è¾¹ä¸Šçš„ä½ç½®æ˜¯å¦ä¸€æ ·
 		if (cpd1.start_idx != cpd2.start_idx || cpd1.end_idx != cpd2.end_idx)
 			return false;
 		
-		if (!fSameIntGraph (cpd1.inter_graph, cpd2.inter_graph))
+		if (!can_two_int_graphs_match (chord1, cpd1.inter_graph, chord2, cpd2.inter_graph))
 			return false;
 	}
 
-	//ÏÂÃæ»¹ĞèÒª¿¼ÂÇÁ½¸öchordµÄpolylineÎ§³ÉµÄÇøÓòÄÚ²¿ÊÇ·ñ°üº¬ÄÚ»·
-	//ÔİÊ±Õâ²¿·ÖÎ´ÊµÏÖ
+	//ä¸‹é¢è¿˜éœ€è¦è€ƒè™‘ä¸¤ä¸ªchordçš„polylineå›´æˆçš„åŒºåŸŸå†…éƒ¨æ˜¯å¦åŒ…å«å†…ç¯
+	//æš‚æ—¶è¿™éƒ¨åˆ†æœªå®ç°
 	//...
 
 	return true;
 }
 
-ChordPosDesc MeshMatchingHandler::get_chord_pos_desc (MMData *mm_data, DualChord *chord)
+ChordPosDesc MeshMatchingHandler::get_chord_pos_desc (DualChord *chord)
 {
 	ChordPosDesc cpd;
 	cpd.chord = chord;
-	VolumeMesh *mesh = mm_data->mesh;
+	cpd.mesh = chord->mesh;
+	VolumeMesh *mesh = chord->mesh;
 	get_inter_graph (cpd, chord);
 	if (!chord->is_closed){
-		get_edge_graph (cpd, mm_data, chord);
+		get_edge_graph (cpd);
 	}
 	return cpd;
 }
@@ -528,6 +859,8 @@ ChordPosDesc MeshMatchingHandler::get_chord_pos_desc (MMData *mm_data, DualChord
 void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 {
 	VolumeMesh *mesh = chord->mesh;
+	cpd.inter_graph.clear ();
+	cpd.inter_graph_indices.clear ();
 	auto E_INT_EG_PTR = mesh->request_edge_property<unsigned long> ("intedgeptr");
 
 	//auto start_asso_eg = JC::get_associated_geometry_edge_of_boundary_eh (mesh, chord->ordered_ehs.front ());
@@ -535,51 +868,82 @@ void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 	auto start_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.front ()]);
 	auto end_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.back ()]);
 
-	//µ÷Õûstart edgeºÍend edge£¬ÊÇµÄÔÚcpdÖĞ£¬start edgeµÄÖµ±Èend edgeµÄÖµÒªĞ¡£¬ÕâÑù±ãÓÚºóÃæµÄÒ»Ğ©ÅĞ¶Ï²Ù×÷
+	//è°ƒæ•´start edgeå’Œend edgeï¼Œæ˜¯çš„åœ¨cpdä¸­ï¼Œstart edgeçš„å€¼æ¯”end edgeçš„å€¼è¦å°ï¼Œè¿™æ ·ä¾¿äºåé¢çš„ä¸€äº›åˆ¤æ–­æ“ä½œ
 	cpd.start_edge = start_asso_eg < end_asso_eg? start_asso_eg : end_asso_eg;
 	cpd.end_edge = start_asso_eg < end_asso_eg? end_asso_eg : start_asso_eg;
 
-	//Èç¹ûchordÖĞµÄehsµÄË³ĞòºÍcpdµÄstartºÍendË³ĞòÏà·´£¬²¢ÇÒstartºÍend edge²»ÊÇÍ¬Ò»Ìõ¼¸ºÎ±ß
-	//ÄÇÃ´¾Í½«ehsµÄË³Ğò·´Ïò
+	//å¦‚æœchordä¸­çš„ehsçš„é¡ºåºå’Œcpdçš„startå’Œendé¡ºåºç›¸åï¼Œå¹¶ä¸”startå’Œend edgeä¸æ˜¯åŒä¸€æ¡å‡ ä½•è¾¹
+	//é‚£ä¹ˆå°±å°†ehsçš„é¡ºåºåå‘
 	if (start_asso_eg != end_asso_eg && start_asso_eg == cpd.end_edge){
 		std::reverse (chord->ordered_ehs.begin (), chord->ordered_ehs.end ());
 		std::reverse (chord->ordered_fhs.begin (), chord->ordered_fhs.end ());
 	}
-	//Èç¹ûstartºÍend edgeÊÇÍ¬Ò»Ìõ¼¸ºÎ±ß£¬ÄÇÃ´ehsµÄË³ĞòÔÚºóÃæµÄget_edge_graphÖĞ½øĞĞµ÷Õû
+	//å¦‚æœstartå’Œend edgeæ˜¯åŒä¸€æ¡å‡ ä½•è¾¹ï¼Œé‚£ä¹ˆehsçš„é¡ºåºåœ¨åé¢çš„get_edge_graphä¸­è¿›è¡Œè°ƒæ•´
 
-	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
 	auto ordered_fhs = chord->ordered_fhs;
-	auto &int_graph = cpd.inter_graph;
-	auto &int_ordered_ehs = cpd.inter_ordered_ehs;
 	foreach (auto &fh, ordered_fhs){
-		auto heh_vec = mesh->face (fh).halfedges ();
-		OvmEgH inter_chord_eh = mesh->InvalidEdgeHandle;
-		foreach (auto &heh, heh_vec){
-			auto eh = mesh->edge_handle (heh);
-			if (!JC::contains (chord->ordered_ehs, eh)){
-				DualChord *int_chord = (DualChord*)(E_CHORD_PTR[eh]);
-				if (JC::contains (all_matched_chords, int_chord)){
-					int_graph.push_back (int_chord);
-					int_ordered_ehs.push_back (eh);
-					//ÎªÁË¾«È·±ê×¢Î»ÖÃ£¬»¹ĞèÒª»ñµÃÔÚint_chordµÄÏà½»ĞòÁĞÖĞ£¬¸ÃchordÎ»ÓÚÊ²Ã´Î»ÖÃ
-
-				}
-				break;
+		auto int_chord = get_int_chord_at_this_fh (chord, fh);
+		//å¦‚æœint_chordä¸ºNULLï¼Œåˆ™è¯´æ˜è¯¥chordåœ¨è¯¥fhä¸Šè‡ªç›¸äº¤
+		if (int_chord == NULL){
+			cpd.inter_graph.push_back (NULL);
+			cpd.self_intersecting = true;
+		}else{
+			//å¦‚æœç›¸äº¤çš„chordå½“å‰å¹¶ä¸åœ¨å·²åŒ¹é…chordåˆ—è¡¨ä¸­æ—¶ï¼Œåˆ™å¿½ç•¥
+			if (!has_been_matched (int_chord))
+				continue;
+			cpd.inter_graph.push_back (int_chord);
+			//ä¸‹é¢è¦æ±‚å¾—åœ¨int_chordä¸Šï¼Œå½“å‰chordå’Œå®ƒç›¸äº¤äºç¬¬å‡ æ®µ
+			int int_idx = 0;
+			foreach (auto fh_on_int_chord, int_chord->ordered_fhs){
+				auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
+				if (int_chord_on_int_chord == NULL)
+					int_idx++;
+				if (fh_on_int_chord == fh)
+					break;
+				if (has_been_matched (int_chord_on_int_chord))
+					int_idx++;
 			}
+			cpd.inter_graph_indices.push_back (int_idx);
 		}
 	}
 }
 
-void MeshMatchingHandler::get_edge_graph (ChordPosDesc &cpd, MMData *mm_data, DualChord *chord)
+DualChord * MeshMatchingHandler::get_int_chord_at_this_fh (DualChord *chord, OvmFaH fh)
 {
-	VolumeMesh *mesh = mm_data->mesh;
+	auto mesh = chord->mesh;
+	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
 
+	auto heh_vec = mesh->face (fh).halfedges ();
+	std::set<DualChord*> chords;
+	foreach (auto &heh, heh_vec){
+		auto eh = mesh->edge_handle (heh);
+		DualChord *tmp_chord = (DualChord*)(E_CHORD_PTR[eh]);
+		assert (tmp_chord);
+		chords.insert (tmp_chord);
+	}
+	assert (chords.size () <= 2);
+	//å¦‚æœchordsçš„æ•°é‡ä¸º1ï¼Œåˆ™è¯´æ˜è¯¥chordåœ¨è¯¥fhä¸Šè‡ªç›¸äº¤
+	if (chords.size () == 1){
+		return NULL;
+	}else{
+		chords.erase (chord);
+		auto int_chord = *(chords.begin ());
+		return int_chord;
+	}
+}
+
+void MeshMatchingHandler::get_edge_graph (ChordPosDesc &cpd)
+{
+	DualChord *chord = cpd.chord;
+	VolumeMesh *mesh = chord->mesh;
+	MMData *mm_data = get_mesh_matching_data (mesh);
+	
 	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
 	auto fGetOrderedPos = [&] (std::vector<OvmEgH> &ordered_ehs, std::vector<DualChord*> &ordered_chords, EDGE *eg){
 		std::vector<OvmEgH> &all_ordered_ehs = mm_data->ordered_ehs_on_edges[eg];
 		foreach (auto &eh, all_ordered_ehs){
 			DualChord *chord_on_eh = (DualChord*)(E_CHORD_PTR[eh]);
-			if (JC::contains (all_matched_chords, chord_on_eh) || chord_on_eh == chord){
+			if (has_been_matched (chord_on_eh) || chord_on_eh == chord){
 				ordered_chords.push_back (chord_on_eh);
 				ordered_ehs.push_back (eh);
 			}
@@ -592,7 +956,7 @@ void MeshMatchingHandler::get_edge_graph (ChordPosDesc &cpd, MMData *mm_data, Du
 		return -1;
 	};
 
-	//Èç¹ûÆğÊ¼±ßºÍÖÕÖ¹±ßÔÚ²»Í¬µÄ¼¸ºÎ±ßÉÏ£¬ÔòĞèÒª»ñµÃÁ½¸öĞòÁĞ
+	//å¦‚æœèµ·å§‹è¾¹å’Œç»ˆæ­¢è¾¹åœ¨ä¸åŒçš„å‡ ä½•è¾¹ä¸Šï¼Œåˆ™éœ€è¦è·å¾—ä¸¤ä¸ªåºåˆ—
 	if (cpd.start_edge != cpd.end_edge){
 		fGetOrderedPos (cpd.start_edge_ordered_ehs, cpd.start_edge_graph, cpd.start_edge);
 		fGetOrderedPos (cpd.end_edge_ordered_ehs, cpd.end_edge_graph, cpd.end_edge);
@@ -601,12 +965,12 @@ void MeshMatchingHandler::get_edge_graph (ChordPosDesc &cpd, MMData *mm_data, Du
 		cpd.end_idx = fGetIndex (cpd.end_edge_ordered_ehs, chord->ordered_ehs.back ());
 		assert (cpd.end_idx != -1);
 	}
-	//Èç¹ûÆğÊ¼±ßºÍÖÕÖ¹±ßÏàÍ¬£¬Ö»ĞèÒª»ñµÃÒ»¸öĞòÁĞ
+	//å¦‚æœèµ·å§‹è¾¹å’Œç»ˆæ­¢è¾¹ç›¸åŒï¼Œåªéœ€è¦è·å¾—ä¸€ä¸ªåºåˆ—
 	else{
 		fGetOrderedPos (cpd.start_edge_ordered_ehs, cpd.start_edge_graph, cpd.start_edge);
 		int start_idx = fGetIndex (cpd.start_edge_ordered_ehs, chord->ordered_ehs.front ()),
 			end_idx = fGetIndex (cpd.start_edge_ordered_ehs, chord->ordered_ehs.back ());
-		//Èç¹ûÆğÊ¼±ßÔÚ¸Ã±ßÉÏµÄĞòºÅ±ÈÖÕÖ¹±ß´ó£¬ÄÇÃ´¾Í·´×ª¸ÃchordµÄehs
+		//å¦‚æœèµ·å§‹è¾¹åœ¨è¯¥è¾¹ä¸Šçš„åºå·æ¯”ç»ˆæ­¢è¾¹å¤§ï¼Œé‚£ä¹ˆå°±åè½¬è¯¥chordçš„ehs
 		if (start_idx > end_idx){
 			std::reverse (chord->ordered_ehs.begin (), chord->ordered_ehs.end ());
 			std::reverse (chord->ordered_fhs.begin (), chord->ordered_fhs.end ());
@@ -667,9 +1031,12 @@ void MeshMatchingHandler::get_all_vhs_on_interface (std::unordered_set<OvmVeH> &
 
 }
 
-void MeshMatchingHandler::translate_chord_pos_desc (ChordPosDesc &in_cpd, ChordPosDesc &out_cpd)
+ChordPosDesc MeshMatchingHandler::translate_chord_pos_desc (ChordPosDesc &in_cpd)
 {
+	ChordPosDesc out_cpd;
 	VolumeMesh *in_mesh = in_cpd.chord->mesh;
+	out_cpd.mesh = oppo_mesh (in_mesh);
+
 	out_cpd.chord = NULL;
 	out_cpd.start_edge = in_cpd.start_edge; out_cpd.end_edge = in_cpd.end_edge;
 	out_cpd.start_idx = in_cpd.start_idx; out_cpd.end_idx = in_cpd.end_idx;
@@ -691,6 +1058,9 @@ void MeshMatchingHandler::translate_chord_pos_desc (ChordPosDesc &in_cpd, ChordP
 	out_cpd.inter_graph = fTranslate (in_cpd.inter_graph);
 	out_cpd.start_edge_graph = fTranslate (in_cpd.start_edge_graph);
 	out_cpd.end_edge_graph = fTranslate (out_cpd.end_edge_graph);
+	out_cpd.inter_graph_indices = in_cpd.inter_graph_indices;
+	out_cpd.self_intersecting = in_cpd.self_intersecting;
+	return out_cpd;
 }
 
 DualChord *MeshMatchingHandler::get_matched_chord (DualChord *chord)
@@ -731,9 +1101,9 @@ DualChord *MeshMatchingHandler::get_matched_chord (DualChord *chord)
 //			return suitable_vhs;
 //	};
 //
-//	//µ±chordÎª¿ª·ÅchordÊ±
+//	//å½“chordä¸ºå¼€æ”¾chordæ—¶
 //	auto fFindOpenPolyline = [&]()->std::vector<OvmEgH>{
-//		//ÕÒµ½ÆğÊ¼µã¼¯ºÏ
+//		//æ‰¾åˆ°èµ·å§‹ç‚¹é›†åˆ
 //		std::vector<OvmEgH> ordered_ehs;
 //		get_ordered_ehs_on_edge (other_mesh, other_mm_data->inter_patch, trans_cpd.start_edge, ordered_ehs);
 //		auto suitable_start_vhs = fGetSuitableVhsOnEdge (other_mesh, ordered_ehs, trans_cpd.start_idx);

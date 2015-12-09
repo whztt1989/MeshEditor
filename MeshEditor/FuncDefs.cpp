@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include "FuncDefs.h"
 #include <OpenVolumeMesh/Attribs/StatusAttrib.hh>
 #include <OpenVolumeMesh/FileManager/FileManager.hh>
@@ -49,35 +49,37 @@ namespace JC{
 	void init_volume_mesh (VolumeMesh *mesh, BODY *body, double myresabs, std::unordered_set<OvmVeH> *left_vhs)
 	{
 		attach_mesh_elements_to_ACIS_entities (mesh, body, myresabs, left_vhs);
-		SheetSet sheet_set;
-		retrieve_sheets (mesh, sheet_set);
+		//SheetSet sheet_set;
+		//retrieve_sheets (mesh, sheet_set);
 	}
 
 	bool save_volume_mesh (VolumeMesh *mesh, QString mesh_path)
 	{
 		OpenVolumeMesh::IO::FileManager fileManager;
-		auto new_mesh = new VolumeMesh ();
-		
-		std::hash_map<OvmVeH, OvmVeH> vv_mapping;
-		for (auto v_it = mesh->vertices_begin (); 
-			v_it != mesh->vertices_end (); ++v_it){
-				auto vh = *v_it;
-				auto new_vh = new_mesh->add_vertex (mesh->vertex (vh));
-				vv_mapping.insert (std::make_pair (vh, new_vh));
-		}
-		for (auto c_it = mesh->cells_begin (); 
-			c_it != mesh->cells_end (); ++c_it){
-				std::vector<OvmVeH> vhs;
-				for (auto hv_it = mesh->hv_iter (*c_it);
-					hv_it; ++hv_it){
-						auto vh = *hv_it;
-						vhs.push_back (vv_mapping[vh]);
-				}
-				new_mesh->add_cell (vhs);
-		}
+		//auto new_mesh = new VolumeMesh ();
+		//
+		//std::hash_map<OvmVeH, OvmVeH> vv_mapping;
+		//for (auto v_it = mesh->vertices_begin (); 
+		//	v_it != mesh->vertices_end (); ++v_it){
+		//		auto vh = *v_it;
+		//		auto new_vh = new_mesh->add_vertex (mesh->vertex (vh));
+		//		vv_mapping.insert (std::make_pair (vh, new_vh));
+		//}
+		//for (auto c_it = mesh->cells_begin (); 
+		//	c_it != mesh->cells_end (); ++c_it){
+		//		std::vector<OvmVeH> vhs;
+		//		for (auto hv_it = mesh->hv_iter (*c_it);
+		//			hv_it; ++hv_it){
+		//				auto vh = *hv_it;
+		//				vhs.push_back (vv_mapping[vh]);
+		//		}
+		//		new_mesh->add_cell (vhs);
+		//}
 
-		bool res = fileManager.writeFile (mesh_path.toStdString (), *new_mesh);
-		delete new_mesh;
+		//bool res = fileManager.writeFile (mesh_path.toStdString (), *new_mesh);
+		//delete new_mesh;
+		bool res = fileManager.writeFile (mesh_path.toStdString (), *mesh);
+		
 		return res;
 	}
 
@@ -85,7 +87,7 @@ namespace JC{
 	{
 		FILE *f = fopen (file_path.toAscii ().data (), "r");
 		if (!f){
-			QMessageBox::critical (NULL, QObject::tr ("´ò¿ª´íÎó£¡"), QObject::tr("´ò¿ªÄ£ĞÍÎÄ¼şÊ§°Ü£¡"));
+			QMessageBox::critical (NULL, QObject::tr ("æ‰“å¼€é”™è¯¯ï¼"), QObject::tr("æ‰“å¼€æ¨¡å‹æ–‡ä»¶å¤±è´¥ï¼"));
 			return NULL;
 		}
 		ENTITY_LIST entities;
@@ -143,7 +145,7 @@ namespace JC{
 		std::pair<QString, QString> path_pair;
 
 		if (file_type != "meshedit" && file_type != "meshmatch"){
-			QMessageBox::warning (NULL, QObject::tr ("½âÎö´íÎó£¡"), QObject::tr ("Õâ²»ÊÇÒ»¸öÓĞĞ§µÄÎÄ¼ş£¡"));
+			QMessageBox::warning (NULL, QObject::tr ("è§£æé”™è¯¯ï¼"), QObject::tr ("è¿™ä¸æ˜¯ä¸€ä¸ªæœ‰æ•ˆçš„æ–‡ä»¶ï¼"));
 			return false;
 		}
 		QFileInfo fileInfo (xml_path);
@@ -1097,13 +1099,13 @@ namespace JC{
 				auto heh_vec = mesh->face (test_fh).halfedges ();
 				foreach (OvmHaEgH heh, heh_vec){
 					OvmEgH eh = mesh->edge_handle (heh);
-					//Óöµ½ÊäÈë±ßµÄ±ß½ç£¬Ôò²»ÔÙ¼ÌĞøÀ©É¢
+					//é‡åˆ°è¾“å…¥è¾¹çš„è¾¹ç•Œï¼Œåˆ™ä¸å†ç»§ç»­æ‰©æ•£
 					if (contains (seprate_ehs, eh)) continue;
 
 					OvmFaH oppo_fh = fGetOppoFh (eh, test_fh);
-					//Èç¹ûÓöµ½¼¸ºÎ±ß½ç£¬Ò²²»ÔÙÀ©É¢
+					//å¦‚æœé‡åˆ°å‡ ä½•è¾¹ç•Œï¼Œä¹Ÿä¸å†æ‰©æ•£
 					if (oppo_fh == mesh->InvalidFaceHandle) continue;
-					//Èç¹û¸ÃËÄ±ßĞÎÒÑ¾­·ÃÎÊ¹ıÁË£¬Ôò²»ÔÙ´¦Àí
+					//å¦‚æœè¯¥å››è¾¹å½¢å·²ç»è®¿é—®è¿‡äº†ï¼Œåˆ™ä¸å†å¤„ç†
 					if (F_VISITED[oppo_fh]) continue;
 					one_fhs_patch.insert (oppo_fh);
 					spread_set.push (oppo_fh);
@@ -1167,6 +1169,74 @@ namespace JC{
 		}
 		get_separate_chs_sets (mesh, all_chs, sep_fhs, sep_chs_sets);
 		delete all_chs;
+	}
+
+	void get_fhs_on_acis_faces (VolumeMesh *mesh, std::set<FACE *> acis_face, std::unordered_set<OvmFaH> &fhs)
+	{
+		fhs.clear ();
+		//é¦–å…ˆè·å¾—æ‰€æœ‰int_facesä¸Šçš„ENTITYçš„æŒ‡é’ˆé›†åˆï¼ŒåŒ…æ‹¬ç‚¹ã€è¾¹ã€é¢
+		std::set<ENTITY*> all_entities;
+		foreach (auto f, acis_face){
+			all_entities.insert (f);
+			ENTITY_LIST edges_list, vertices_list;
+			api_get_edges (f, edges_list);
+			for (int i = 0; i != edges_list.count (); ++i)
+				all_entities.insert (edges_list[i]);
+
+			api_get_vertices (f, vertices_list);
+			for (int i = 0; i != vertices_list.count (); ++i)
+				all_entities.insert (vertices_list[i]);
+		}
+
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
+			auto adj_vhs = JC::get_adj_vertices_around_face (mesh, *bf_it);
+			bool is_on_inter = true;
+			foreach (auto adj_vh, adj_vhs){
+				ENTITY* cur_entity = (ENTITY*)(V_ENT_PTR[adj_vh]);
+				if (all_entities.find (cur_entity) == all_entities.end ()){
+					is_on_inter = false;
+					break;
+				}
+			}
+			if (is_on_inter)
+				fhs.insert (*bf_it);
+		}
+	}
+
+	std::unordered_set<OvmFaH> get_fhs_on_acis_faces (VolumeMesh *mesh, std::set<FACE *> acis_face)
+	{
+		std::unordered_set<OvmFaH> fhs;
+		fhs.clear ();
+		//é¦–å…ˆè·å¾—æ‰€æœ‰int_facesä¸Šçš„ENTITYçš„æŒ‡é’ˆé›†åˆï¼ŒåŒ…æ‹¬ç‚¹ã€è¾¹ã€é¢
+		std::set<ENTITY*> all_entities;
+		foreach (auto f, acis_face){
+			all_entities.insert (f);
+			ENTITY_LIST edges_list, vertices_list;
+			api_get_edges (f, edges_list);
+			for (int i = 0; i != edges_list.count (); ++i)
+				all_entities.insert (edges_list[i]);
+
+			api_get_vertices (f, vertices_list);
+			for (int i = 0; i != vertices_list.count (); ++i)
+				all_entities.insert (vertices_list[i]);
+		}
+
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
+			auto adj_vhs = JC::get_adj_vertices_around_face (mesh, *bf_it);
+			bool is_on_inter = true;
+			foreach (auto adj_vh, adj_vhs){
+				ENTITY* cur_entity = (ENTITY*)(V_ENT_PTR[adj_vh]);
+				if (all_entities.find (cur_entity) == all_entities.end ()){
+					is_on_inter = false;
+					break;
+				}
+			}
+			if (is_on_inter)
+				fhs.insert (*bf_it);
+		}
+		return fhs;
 	}
 
 	void get_fhs_on_acis_face (VolumeMesh *mesh, FACE *acis_face, std::unordered_set<OvmFaH> &fhs)
@@ -1312,7 +1382,7 @@ namespace JC{
 				edge_count_mapping[mesh->edge_handle (heh)].insert (fh);
 		}
 
-		//¸ù¾İ²»Í¬µÄ±ßµÄÀàĞÍµ÷ÓÃ²»Í¬µÄ¶ÈÊı¼ÆËãº¯Êı
+		//æ ¹æ®ä¸åŒçš„è¾¹çš„ç±»å‹è°ƒç”¨ä¸åŒçš„åº¦æ•°è®¡ç®—å‡½æ•°
 		int total_valence_change = 0;
 		foreach (auto &p, edge_count_mapping){
 			if (p.second.size () == 1 && mesh->is_boundary (p.first))
@@ -1337,7 +1407,7 @@ namespace JC{
 				edge_count_mapping[mesh->edge_handle (heh)].push_back (fh);
 		}
 
-		//¸ù¾İ²»Í¬µÄ±ßµÄÀàĞÍµ÷ÓÃ²»Í¬µÄ¶ÈÊı¼ÆËãº¯Êı
+		//æ ¹æ®ä¸åŒçš„è¾¹çš„ç±»å‹è°ƒç”¨ä¸åŒçš„åº¦æ•°è®¡ç®—å‡½æ•°
 		int total_valence_change = 0;
 		foreach (auto &p, edge_count_mapping){
 			if (p.second.size () != 2)
@@ -1361,13 +1431,13 @@ namespace JC{
 			}
 		}
 
-		//¶ÔÓÚsheetÉú³ÉµÄÁ÷ĞÎÃæ¼¯À´Ëµ£¬²»Ó¦³öÏÖ×ÔÏà½»´ÎÊı¶àÓÚÁ½´ÎµÄÇé¿ö
+		//å¯¹äºsheetç”Ÿæˆçš„æµå½¢é¢é›†æ¥è¯´ï¼Œä¸åº”å‡ºç°è‡ªç›¸äº¤æ¬¡æ•°å¤šäºä¸¤æ¬¡çš„æƒ…å†µ
 		foreach (auto &p, edge_count_mapping){
 			if (p.second == 0 || p.second >= 3)
 				return false;
 		}
 
-		//¶ÔÃæµÄÁ¬Í¨ĞÔ×ö¼ì²é
+		//å¯¹é¢çš„è¿é€šæ€§åšæ£€æŸ¥
 		std::queue<OvmFaH> fh_spread_set;
 		fh_spread_set.push (*(fhs.begin ()));
 		std::unordered_set<OvmFaH> tmp_fhs = fhs;
@@ -1390,15 +1460,15 @@ namespace JC{
 			}//end foreach (OvmHaEgH test_heh, heh_vec){...
 		}//end while (!fh_spread_set.empty ()){...
 
-		//Èç¹ûtmp_fhsÀïÃæ»¹ÓĞÊ£ÓàµÄÃæ£¬ÔòËµÃ÷fhsÀïÃæµÄÃæ²¢²»¶¼ÊÇÍ¨¹ı±ßÏàÁÚµÄ
+		//å¦‚æœtmp_fhsé‡Œé¢è¿˜æœ‰å‰©ä½™çš„é¢ï¼Œåˆ™è¯´æ˜fhsé‡Œé¢çš„é¢å¹¶ä¸éƒ½æ˜¯é€šè¿‡è¾¹ç›¸é‚»çš„
 		if (!tmp_fhs.empty ())
 			return false;
 
-		//¶Ô±ß×ö¼ì²é£¬Èç¹ûÒ»Ìõ±ß
+		//å¯¹è¾¹åšæ£€æŸ¥ï¼Œå¦‚æœä¸€æ¡è¾¹
 
-		//ÏÂÃæ¶ÔÓÚµãÔÙ×ö½øÒ»²½µÄ¼ì²é
-		//¶ÔÓÚÁ÷ĞÎÌå£¬Ã¿Ò»¸öµãËùÏàÁÚµÄËÄ±ßĞÎ¶¼ÊÇÍ¨¹ı±ßÁ¬½ÓÔÚÒ»ÆğµÄ
-		//Èç¹û²»ÄÜ¹»Í¨¹ı±ßÏàÁÚ±éÀúÍêËùÓĞµÄÃæ£¬ÔòËµÃ÷¸Ãµã²»ÊÇÁ÷ĞÎÌåÉÏµÄµã
+		//ä¸‹é¢å¯¹äºç‚¹å†åšè¿›ä¸€æ­¥çš„æ£€æŸ¥
+		//å¯¹äºæµå½¢ä½“ï¼Œæ¯ä¸€ä¸ªç‚¹æ‰€ç›¸é‚»çš„å››è¾¹å½¢éƒ½æ˜¯é€šè¿‡è¾¹è¿æ¥åœ¨ä¸€èµ·çš„
+		//å¦‚æœä¸èƒ½å¤Ÿé€šè¿‡è¾¹ç›¸é‚»éå†å®Œæ‰€æœ‰çš„é¢ï¼Œåˆ™è¯´æ˜è¯¥ç‚¹ä¸æ˜¯æµå½¢ä½“ä¸Šçš„ç‚¹
 		auto get_adj_faces_around_vertex_with_limitation = 
 			[&mesh] (OvmVeH vh, std::unordered_set<OvmFaH> &limited_fhs)->std::unordered_set<OvmFaH>{
 			std::unordered_set<OvmFaH> adj_fhs;
@@ -1542,7 +1612,7 @@ namespace JC{
 					if (on_this_face)
 						V_ENT_PTR[*v_it] = (unsigned long)on_this_face;
 					else{
-						/*QMessageBox::critical (NULL, QObject::tr("´íÎó!"), QObject::tr("Õâ¸öµãÕÒ²»µ½¶ÔÓ¦µÄACIS Entity!"));
+						/*QMessageBox::critical (NULL, QObject::tr("é”™è¯¯!"), QObject::tr("è¿™ä¸ªç‚¹æ‰¾ä¸åˆ°å¯¹åº”çš„ACIS Entity!"));
 						assert (false);*/
 						if (left_vhs)
 							left_vhs->insert (*v_it);

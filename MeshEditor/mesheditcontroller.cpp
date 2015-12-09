@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include "mesheditcontroller.h"
 #include "hoopsview.h"
 #include <QMessageBox>
@@ -94,6 +94,12 @@ MeshEditController::MeshEditController(QWidget *parent)
 		SLOT (on_select_edges_for_co ()));
 	connect (ui.pushButton_Select_Edges_OK_For_CO, SIGNAL (clicked ()),
 		SLOT (on_select_edges_ok_for_co ()));
+	connect (ui.pb_Show_Chord_Info_For_CO, SIGNAL (clicked ()),
+		SLOT (on_show_chord_info_for_co ()));
+	connect (ui.pb_Clear_Selection_For_CO, SIGNAL (clicked ()),
+		SLOT (on_clear_selection_for_co ()));
+	connect (ui.pb_Select_Chord_By_Idx_For_CO, SIGNAL (clicked ()),
+		SLOT (on_select_chord_by_idx_for_co ()));
 
 	connect (ui.radioButton_Smooth_Whole_For_MO, SIGNAL (clicked ()),
 		SLOT (on_select_smooth_whole_for_mo ()));
@@ -157,35 +163,7 @@ void MeshEditController::on_get_int_face_quads ()
 
 std::unordered_set<OvmFaH> MeshEditController::get_interface_quads ()
 {
-	int_quads.clear ();
-	//Ê×ÏÈ»ñµÃËùÓÐint_facesÉÏµÄENTITYµÄÖ¸Õë¼¯ºÏ£¬°üÀ¨µã¡¢±ß¡¢Ãæ
-	std::set<ENTITY*> all_entities;
-	foreach (auto f, inter_faces){
-		all_entities.insert (f);
-		ENTITY_LIST edges_list, vertices_list;
-		api_get_edges (f, edges_list);
-		for (int i = 0; i != edges_list.count (); ++i)
-			all_entities.insert (edges_list[i]);
-		
-		api_get_vertices (f, vertices_list);
-		for (int i = 0; i != vertices_list.count (); ++i)
-			all_entities.insert (vertices_list[i]);
-	}
-
-	auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
-	for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
-		auto adj_vhs = JC::get_adj_vertices_around_face (mesh, *bf_it);
-		bool is_on_inter = true;
-		foreach (auto adj_vh, adj_vhs){
-			ENTITY* cur_entity = (ENTITY*)(V_ENT_PTR[adj_vh]);
-			if (all_entities.find (cur_entity) == all_entities.end ()){
-				is_on_inter = false;
-				break;
-			}
-		}
-		if (is_on_inter)
-			int_quads.insert (*bf_it);
-	}
+	JC::get_fhs_on_acis_faces (mesh, inter_faces, int_quads);
 
 	return int_quads;
 }

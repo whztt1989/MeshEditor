@@ -1,4 +1,4 @@
-#ifndef MANUALMESHMATCH_H
+﻿#ifndef MANUALMESHMATCH_H
 #define MANUALMESHMATCH_H
 
 #include <QWidget>
@@ -38,11 +38,11 @@ private slots:
 	void on_highlight_chord_pair (uint chord_ptr1, uint chord_ptr2);
 	void on_delete_chord_pair (uint chord_ptr1, uint chord_ptr2);
 	void on_close_chord_pair_widget ();
-	void on_see_only_left ();
+	void on_show_left ();
+	void on_show_right ();
 private:
 	std::set<std::pair<FACE *, FACE*> > get_interfaces ();
 	DualChord * get_matched_chord (DualChord *chord);
-	std::vector<DualChord*> get_intersect_seq (DualChord *chord, bool &self_int);
 
 private:                                                                      
 	Ui::ManualMeshMatch ui;
@@ -61,7 +61,6 @@ private:
 
 	std::unordered_set<OvmFaH> interface_fhs1, interface_fhs2;
 	MeshMatchingHandler *mm_handler;
-	ChordPairs matched_chord_pairs;
 	ChordSet unmatched_chords1, unmatched_chords2;
 
 	ChordMatchWidget *chord_match_widget;

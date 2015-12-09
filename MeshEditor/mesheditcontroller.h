@@ -1,4 +1,4 @@
-#ifndef MESHEDITCONTROLLER_H
+﻿#ifndef MESHEDITCONTROLLER_H
 #define MESHEDITCONTROLLER_H
 
 #include <QWidget>
@@ -86,6 +86,9 @@ private slots:
 
 	void on_select_edges_for_co ();
 	void on_select_edges_ok_for_co ();
+	void on_show_chord_info_for_co ();
+	void on_clear_selection_for_co ();
+	void on_select_chord_by_idx_for_co ();
 
 	void on_open_for_pd ();
 	void on_show_interface_patches_for_pd ();

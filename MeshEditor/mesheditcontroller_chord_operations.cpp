@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include "mesheditcontroller.h"
 #include "hoopsview.h"
 #include <QMessageBox>
@@ -15,11 +15,11 @@ void MeshEditController::on_select_edges_ok_for_co ()
 {
 	selected_ehs.clear ();
 	if (!hoopsview->get_selected_elements (std::vector<OvmVeH>(), selected_ehs, std::vector<OvmFaH> ())){
-		QMessageBox::warning (this, tr("¾¯¸æ"), tr("Î´Ñ¡ÖĞÈÎºÎÍø¸ñ±ß£¡"), QMessageBox::Ok);
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("æœªé€‰ä¸­ä»»ä½•ç½‘æ ¼è¾¹ï¼"), QMessageBox::Ok);
 		return;
 	}
 	if (selected_ehs.size () != 1){
-		QMessageBox::warning (this, tr("¾¯¸æ"), tr("Ö»ÄÜÑ¡ÖĞÒ»ÌõÍø¸ñ±ß£¡"), QMessageBox::Ok);
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("åªèƒ½é€‰ä¸­ä¸€æ¡ç½‘æ ¼è¾¹ï¼"), QMessageBox::Ok);
 		return;
 	}
 
@@ -35,10 +35,49 @@ void MeshEditController::on_select_edges_ok_for_co ()
 	sl<<"red"<<"blue"<<"green"<<"pink"<<"black"<<"white";
 
 	bool ok = false;
-	QString color_str = QInputDialog::getItem (this, tr("Ñ¡ÔñÑÕÉ«"), tr("ChordÑÕÉ«"), sl, 0, false, &ok);
+	QString color_str = QInputDialog::getItem (this, tr("é€‰æ‹©é¢œè‰²"), tr("Chordé¢œè‰²"), sl, 0, false, &ok);
 
 	if (ok)
 		hoopsview->render_chord (selected_chord, color_str.toAscii ().data (), 8);
 	else
 		hoopsview->render_chord (selected_chord, "red", 8);
+}
+
+void MeshEditController::on_show_chord_info_for_co ()
+{
+	if (!selected_chord)
+		return;
+	QString msg;
+	msg = QString ("No. %1").arg (selected_chord->idx);
+	QMessageBox::information (this, tr("Chordä¿¡æ¯"), msg);
+}
+
+void MeshEditController::on_clear_selection_for_co ()
+{
+	if (selected_chord)
+		hoopsview->derender_chord (selected_chord);
+	selected_chord = NULL;
+}
+
+void MeshEditController::on_select_chord_by_idx_for_co ()
+{
+	auto chord_idx = ui.le_Chord_Idx_For_Co->text ().toInt ();
+	ChordSet chord_set;
+	JC::retrieve_chords (mesh, get_interface_quads (), chord_set);
+
+	if (selected_chord)
+		hoopsview->derender_chord (selected_chord);
+	selected_chord = NULL;
+	foreach (auto c, chord_set){
+		if (c->idx == chord_idx){
+			selected_chord = c;
+			break;
+		}
+	}
+	if (!selected_chord){
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("æ²¡æœ‰è¿™ä¸ªchordï¼"));
+		return;
+	}
+
+	hoopsview->render_chord (selected_chord);
 }

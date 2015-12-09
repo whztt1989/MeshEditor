@@ -19,6 +19,7 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QLabel>
+#include <QtGui/QLineEdit>
 #include <QtGui/QPushButton>
 #include <QtGui/QRadioButton>
 #include <QtGui/QSpacerItem>
@@ -114,9 +115,20 @@ public:
     QPushButton *pushButton_Postprocess_For_CC;
     QSpacerItem *verticalSpacer_7;
     QWidget *page_3;
+    QVBoxLayout *verticalLayout_14;
+    QGroupBox *groupBox_4;
     QVBoxLayout *verticalLayout_4;
+    QLabel *label_3;
+    QHBoxLayout *horizontalLayout_12;
     QPushButton *pushButton_Select_Edges_For_CO;
     QPushButton *pushButton_Select_Edges_OK_For_CO;
+    QFrame *line_4;
+    QLabel *label_4;
+    QHBoxLayout *horizontalLayout_11;
+    QLineEdit *le_Chord_Idx_For_Co;
+    QPushButton *pb_Select_Chord_By_Idx_For_CO;
+    QPushButton *pb_Show_Chord_Info_For_CO;
+    QPushButton *pb_Clear_Selection_For_CO;
     QSpacerItem *verticalSpacer_3;
     QWidget *page_4;
     QVBoxLayout *verticalLayout_12;
@@ -601,24 +613,86 @@ public:
         page_3 = new QWidget();
         page_3->setObjectName(QString::fromUtf8("page_3"));
         page_3->setGeometry(QRect(0, 0, 147, 433));
-        verticalLayout_4 = new QVBoxLayout(page_3);
+        verticalLayout_14 = new QVBoxLayout(page_3);
+        verticalLayout_14->setSpacing(6);
+        verticalLayout_14->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_14->setObjectName(QString::fromUtf8("verticalLayout_14"));
+        verticalLayout_14->setContentsMargins(0, -1, 0, -1);
+        groupBox_4 = new QGroupBox(page_3);
+        groupBox_4->setObjectName(QString::fromUtf8("groupBox_4"));
+        verticalLayout_4 = new QVBoxLayout(groupBox_4);
         verticalLayout_4->setSpacing(6);
         verticalLayout_4->setContentsMargins(11, 11, 11, 11);
         verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
         verticalLayout_4->setContentsMargins(0, -1, 0, -1);
-        pushButton_Select_Edges_For_CO = new QPushButton(page_3);
+        label_3 = new QLabel(groupBox_4);
+        label_3->setObjectName(QString::fromUtf8("label_3"));
+
+        verticalLayout_4->addWidget(label_3);
+
+        horizontalLayout_12 = new QHBoxLayout();
+        horizontalLayout_12->setSpacing(6);
+        horizontalLayout_12->setObjectName(QString::fromUtf8("horizontalLayout_12"));
+        pushButton_Select_Edges_For_CO = new QPushButton(groupBox_4);
         pushButton_Select_Edges_For_CO->setObjectName(QString::fromUtf8("pushButton_Select_Edges_For_CO"));
+        pushButton_Select_Edges_For_CO->setMaximumSize(QSize(60, 16777215));
 
-        verticalLayout_4->addWidget(pushButton_Select_Edges_For_CO);
+        horizontalLayout_12->addWidget(pushButton_Select_Edges_For_CO);
 
-        pushButton_Select_Edges_OK_For_CO = new QPushButton(page_3);
+        pushButton_Select_Edges_OK_For_CO = new QPushButton(groupBox_4);
         pushButton_Select_Edges_OK_For_CO->setObjectName(QString::fromUtf8("pushButton_Select_Edges_OK_For_CO"));
+        pushButton_Select_Edges_OK_For_CO->setMaximumSize(QSize(60, 16777215));
 
-        verticalLayout_4->addWidget(pushButton_Select_Edges_OK_For_CO);
+        horizontalLayout_12->addWidget(pushButton_Select_Edges_OK_For_CO);
+
+
+        verticalLayout_4->addLayout(horizontalLayout_12);
+
+        line_4 = new QFrame(groupBox_4);
+        line_4->setObjectName(QString::fromUtf8("line_4"));
+        line_4->setFrameShape(QFrame::HLine);
+        line_4->setFrameShadow(QFrame::Sunken);
+
+        verticalLayout_4->addWidget(line_4);
+
+        label_4 = new QLabel(groupBox_4);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+
+        verticalLayout_4->addWidget(label_4);
+
+        horizontalLayout_11 = new QHBoxLayout();
+        horizontalLayout_11->setSpacing(6);
+        horizontalLayout_11->setObjectName(QString::fromUtf8("horizontalLayout_11"));
+        le_Chord_Idx_For_Co = new QLineEdit(groupBox_4);
+        le_Chord_Idx_For_Co->setObjectName(QString::fromUtf8("le_Chord_Idx_For_Co"));
+
+        horizontalLayout_11->addWidget(le_Chord_Idx_For_Co);
+
+        pb_Select_Chord_By_Idx_For_CO = new QPushButton(groupBox_4);
+        pb_Select_Chord_By_Idx_For_CO->setObjectName(QString::fromUtf8("pb_Select_Chord_By_Idx_For_CO"));
+        pb_Select_Chord_By_Idx_For_CO->setMaximumSize(QSize(50, 16777215));
+
+        horizontalLayout_11->addWidget(pb_Select_Chord_By_Idx_For_CO);
+
+
+        verticalLayout_4->addLayout(horizontalLayout_11);
+
+
+        verticalLayout_14->addWidget(groupBox_4);
+
+        pb_Show_Chord_Info_For_CO = new QPushButton(page_3);
+        pb_Show_Chord_Info_For_CO->setObjectName(QString::fromUtf8("pb_Show_Chord_Info_For_CO"));
+
+        verticalLayout_14->addWidget(pb_Show_Chord_Info_For_CO);
+
+        pb_Clear_Selection_For_CO = new QPushButton(page_3);
+        pb_Clear_Selection_For_CO->setObjectName(QString::fromUtf8("pb_Clear_Selection_For_CO"));
+
+        verticalLayout_14->addWidget(pb_Clear_Selection_For_CO);
 
         verticalSpacer_3 = new QSpacerItem(20, 355, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        verticalLayout_4->addItem(verticalSpacer_3);
+        verticalLayout_14->addItem(verticalSpacer_3);
 
         toolBox->addItem(page_3, QString::fromUtf8("Chord\346\223\215\344\275\234"));
         page_4 = new QWidget();
@@ -859,7 +933,7 @@ public:
 
         retranslateUi(MeshEditController);
 
-        toolBox->setCurrentIndex(1);
+        toolBox->setCurrentIndex(4);
         toolBox->layout()->setSpacing(6);
         stackedWidget->setCurrentIndex(0);
         stackedWidget_Smooth_Methods->setCurrentIndex(2);
@@ -923,8 +997,14 @@ public:
         pushButton_Columns_Collapse_For_CC->setText(QApplication::translate("MeshEditController", "Column Collapse", 0, QApplication::UnicodeUTF8));
         pushButton_Postprocess_For_CC->setText(QApplication::translate("MeshEditController", "\345\220\216\347\273\255\345\244\204\347\220\206", 0, QApplication::UnicodeUTF8));
         toolBox->setItemText(toolBox->indexOf(page_Column_Collapse), QApplication::translate("MeshEditController", "Column\345\241\214\347\274\251", 0, QApplication::UnicodeUTF8));
-        pushButton_Select_Edges_For_CO->setText(QApplication::translate("MeshEditController", "\351\200\211\346\213\251Chord\350\276\271", 0, QApplication::UnicodeUTF8));
+        groupBox_4->setTitle(QApplication::translate("MeshEditController", "\351\200\211\346\213\251Chord", 0, QApplication::UnicodeUTF8));
+        label_3->setText(QApplication::translate("MeshEditController", "\351\274\240\346\240\207\351\200\211\346\213\251\357\274\232", 0, QApplication::UnicodeUTF8));
+        pushButton_Select_Edges_For_CO->setText(QApplication::translate("MeshEditController", "\351\200\211\346\213\251\350\276\271", 0, QApplication::UnicodeUTF8));
         pushButton_Select_Edges_OK_For_CO->setText(QApplication::translate("MeshEditController", "\351\200\211\346\213\251\347\273\223\346\235\237", 0, QApplication::UnicodeUTF8));
+        label_4->setText(QApplication::translate("MeshEditController", "\347\264\242\345\274\225\351\200\211\346\213\251\357\274\232", 0, QApplication::UnicodeUTF8));
+        pb_Select_Chord_By_Idx_For_CO->setText(QApplication::translate("MeshEditController", "\347\241\256\345\256\232", 0, QApplication::UnicodeUTF8));
+        pb_Show_Chord_Info_For_CO->setText(QApplication::translate("MeshEditController", "\346\230\276\347\244\272chord\344\277\241\346\201\257", 0, QApplication::UnicodeUTF8));
+        pb_Clear_Selection_For_CO->setText(QApplication::translate("MeshEditController", "\346\270\205\351\231\244\351\200\211\346\213\251", 0, QApplication::UnicodeUTF8));
         toolBox->setItemText(toolBox->indexOf(page_3), QApplication::translate("MeshEditController", "Chord\346\223\215\344\275\234", 0, QApplication::UnicodeUTF8));
         radioButton_Smooth_Whole_For_MO->setText(QApplication::translate("MeshEditController", "\345\205\250\345\261\200\344\274\230\345\214\226", 0, QApplication::UnicodeUTF8));
         radioButton_Pair_Geom_Node_For_MO->setText(QApplication::translate("MeshEditController", "\345\207\240\344\275\225\347\202\271\351\205\215\345\257\271", 0, QApplication::UnicodeUTF8));
