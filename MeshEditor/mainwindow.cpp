@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	ui.tabWidget->setTabsClosable (true);
 	ui.tabWidget->setMovable (true);
 	ui.tabWidget->hide ();
+	setWindowState(Qt::WindowMaximized);
 }
 
 MainWindow::~MainWindow()

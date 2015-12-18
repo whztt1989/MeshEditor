@@ -30,9 +30,34 @@ public:
 	DualChord (VolumeMesh *m);
 	~DualChord() {};
 public:
+	//将chord的方向反转
+	void reverse (){
+		if (!is_closed){
+			std::reverse (ordered_ehs.begin (), ordered_ehs.end ());
+			std::reverse (ordered_fhs.begin (), ordered_fhs.end ());
+		}else{
+			std::reverse (ordered_ehs.begin () + 1, ordered_ehs.end () - 1);
+			std::reverse (ordered_fhs.begin (), ordered_fhs.end ());
+		}
+	}
+	//如果是封闭chord，则cycle可以让其起始边循环前进times个
+	void cycle (int times = 1){
+		if (!is_closed) return;
+		while (times--){
+			ordered_ehs.erase (ordered_ehs.begin ());
+			ordered_ehs.push_back (ordered_ehs.front ());
+			ordered_fhs.push_back (ordered_fhs.front ());
+			ordered_fhs.erase (ordered_fhs.begin ());
+		}
+	}
+	//获得该chord的长度，即边或者面的个数
+	int length () {
+		return (int)(ordered_fhs.size ());
+	}
 	std::set<FACE *> chord_faces;
 	DualSheet *chord_sheet;
 	bool is_closed;
+	bool is_self_int;
 private:
 	static int chord_idx;
 };

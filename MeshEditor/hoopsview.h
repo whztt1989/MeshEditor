@@ -1,4 +1,4 @@
-#ifndef SIMPLEHQWIDGET_H 
+﻿#ifndef SIMPLEHQWIDGET_H 
 #define SIMPLEHQWIDGET_H 
 
 // Qt Includes 
@@ -133,6 +133,11 @@ public slots:
 	void set_acis_vertices_selectability (bool selectable);
 	void set_acis_edges_selectable (bool selectable);
 	void set_acis_faces_selectable (bool selectable);
+
+	void render_one_acis_edge (EDGE *eg);
+	void derender_one_acis_edge (EDGE *eg);
+	void render_acis_edges (std::set<EDGE*> egs);
+	void derender_acis_edges (std::set<EDGE*> egs);
 public:
 	//////////////////////////////////////////////////////////////////////////
 	//group operations
@@ -164,7 +169,7 @@ public:
 	void clear_cutting_plane ();
 public slots: 
 
-    void OnLoad();
+	void OnLoad();
 	void OnSaveFileAs();
 
 	void OnZoomToExtents();

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "mesheditwidget.h"
 
 void MeshEditWidget::on_start_smoothing ()
@@ -21,7 +21,7 @@ void MeshEditWidget::on_smooth_faces ()
 {
 	std::vector<FACE*> selected_faces;
 	if (!hoopsview->get_selected_acis_entities (NULL, NULL, &selected_faces)){
-		QMessageBox::warning (this, tr("¾¯¸æ"), tr("Î´Ñ¡ÖĞÈÎºÎ¼¸ºÎÃæ£¡"), QMessageBox::Ok);
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("æœªé€‰ä¸­ä»»ä½•å‡ ä½•é¢ï¼"), QMessageBox::Ok);
 		return;
 	}
 

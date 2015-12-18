@@ -115,7 +115,7 @@ public:
     QPushButton *pushButton_Postprocess_For_CC;
     QSpacerItem *verticalSpacer_7;
     QWidget *page_3;
-    QVBoxLayout *verticalLayout_14;
+    QVBoxLayout *verticalLayout_16;
     QGroupBox *groupBox_4;
     QVBoxLayout *verticalLayout_4;
     QLabel *label_3;
@@ -127,6 +127,12 @@ public:
     QHBoxLayout *horizontalLayout_11;
     QLineEdit *le_Chord_Idx_For_Co;
     QPushButton *pb_Select_Chord_By_Idx_For_CO;
+    QGroupBox *groupBox_5;
+    QVBoxLayout *verticalLayout_14;
+    QPushButton *pb_Select_Edge_For_Adjust_Chord;
+    QHBoxLayout *horizontalLayout_13;
+    QPushButton *pb_Select_As_1st_Edge_For_Chord;
+    QPushButton *pb_Select_As_2nd_Edge_For_Chord;
     QPushButton *pb_Show_Chord_Info_For_CO;
     QPushButton *pb_Clear_Selection_For_CO;
     QSpacerItem *verticalSpacer_3;
@@ -189,7 +195,7 @@ public:
         toolBox->setObjectName(QString::fromUtf8("toolBox"));
         page_Basic_Operations = new QWidget();
         page_Basic_Operations->setObjectName(QString::fromUtf8("page_Basic_Operations"));
-        page_Basic_Operations->setGeometry(QRect(0, 0, 147, 433));
+        page_Basic_Operations->setGeometry(QRect(0, 0, 124, 234));
         verticalLayout_18 = new QVBoxLayout(page_Basic_Operations);
         verticalLayout_18->setSpacing(6);
         verticalLayout_18->setContentsMargins(0, 0, 0, 0);
@@ -299,7 +305,7 @@ public:
         toolBox->addItem(page_Basic_Operations, QString::fromUtf8("\345\237\272\346\234\254\346\223\215\344\275\234"));
         page_Sheet_Inflation = new QWidget();
         page_Sheet_Inflation->setObjectName(QString::fromUtf8("page_Sheet_Inflation"));
-        page_Sheet_Inflation->setGeometry(QRect(0, 0, 147, 433));
+        page_Sheet_Inflation->setGeometry(QRect(0, 0, 132, 402));
         verticalLayout_2 = new QVBoxLayout(page_Sheet_Inflation);
         verticalLayout_2->setSpacing(6);
         verticalLayout_2->setContentsMargins(11, 11, 11, 11);
@@ -430,7 +436,7 @@ public:
         toolBox->addItem(page_Sheet_Inflation, QString::fromUtf8("Sheet\347\224\237\346\210\220"));
         page_Sheet_Extraction = new QWidget();
         page_Sheet_Extraction->setObjectName(QString::fromUtf8("page_Sheet_Extraction"));
-        page_Sheet_Extraction->setGeometry(QRect(0, 0, 147, 433));
+        page_Sheet_Extraction->setGeometry(QRect(0, 0, 98, 163));
         verticalLayout_3 = new QVBoxLayout(page_Sheet_Extraction);
         verticalLayout_3->setSpacing(6);
         verticalLayout_3->setContentsMargins(11, 11, 11, 11);
@@ -470,7 +476,7 @@ public:
         toolBox->addItem(page_Sheet_Extraction, QString::fromUtf8("Sheet\345\210\240\351\231\244"));
         page_Column_Collapse = new QWidget();
         page_Column_Collapse->setObjectName(QString::fromUtf8("page_Column_Collapse"));
-        page_Column_Collapse->setGeometry(QRect(0, 0, 147, 433));
+        page_Column_Collapse->setGeometry(QRect(0, 0, 108, 340));
         verticalLayout_7 = new QVBoxLayout(page_Column_Collapse);
         verticalLayout_7->setSpacing(6);
         verticalLayout_7->setContentsMargins(11, 11, 11, 11);
@@ -613,11 +619,11 @@ public:
         page_3 = new QWidget();
         page_3->setObjectName(QString::fromUtf8("page_3"));
         page_3->setGeometry(QRect(0, 0, 147, 433));
-        verticalLayout_14 = new QVBoxLayout(page_3);
-        verticalLayout_14->setSpacing(6);
-        verticalLayout_14->setContentsMargins(11, 11, 11, 11);
-        verticalLayout_14->setObjectName(QString::fromUtf8("verticalLayout_14"));
-        verticalLayout_14->setContentsMargins(0, -1, 0, -1);
+        verticalLayout_16 = new QVBoxLayout(page_3);
+        verticalLayout_16->setSpacing(6);
+        verticalLayout_16->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_16->setObjectName(QString::fromUtf8("verticalLayout_16"));
+        verticalLayout_16->setContentsMargins(0, -1, 0, -1);
         groupBox_4 = new QGroupBox(page_3);
         groupBox_4->setObjectName(QString::fromUtf8("groupBox_4"));
         verticalLayout_4 = new QVBoxLayout(groupBox_4);
@@ -678,26 +684,59 @@ public:
         verticalLayout_4->addLayout(horizontalLayout_11);
 
 
-        verticalLayout_14->addWidget(groupBox_4);
+        verticalLayout_16->addWidget(groupBox_4);
+
+        groupBox_5 = new QGroupBox(page_3);
+        groupBox_5->setObjectName(QString::fromUtf8("groupBox_5"));
+        verticalLayout_14 = new QVBoxLayout(groupBox_5);
+        verticalLayout_14->setSpacing(6);
+        verticalLayout_14->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_14->setObjectName(QString::fromUtf8("verticalLayout_14"));
+        verticalLayout_14->setContentsMargins(0, -1, 0, -1);
+        pb_Select_Edge_For_Adjust_Chord = new QPushButton(groupBox_5);
+        pb_Select_Edge_For_Adjust_Chord->setObjectName(QString::fromUtf8("pb_Select_Edge_For_Adjust_Chord"));
+
+        verticalLayout_14->addWidget(pb_Select_Edge_For_Adjust_Chord);
+
+        horizontalLayout_13 = new QHBoxLayout();
+        horizontalLayout_13->setSpacing(0);
+        horizontalLayout_13->setObjectName(QString::fromUtf8("horizontalLayout_13"));
+        pb_Select_As_1st_Edge_For_Chord = new QPushButton(groupBox_5);
+        pb_Select_As_1st_Edge_For_Chord->setObjectName(QString::fromUtf8("pb_Select_As_1st_Edge_For_Chord"));
+        pb_Select_As_1st_Edge_For_Chord->setMaximumSize(QSize(60, 16777215));
+
+        horizontalLayout_13->addWidget(pb_Select_As_1st_Edge_For_Chord);
+
+        pb_Select_As_2nd_Edge_For_Chord = new QPushButton(groupBox_5);
+        pb_Select_As_2nd_Edge_For_Chord->setObjectName(QString::fromUtf8("pb_Select_As_2nd_Edge_For_Chord"));
+        pb_Select_As_2nd_Edge_For_Chord->setMaximumSize(QSize(60, 16777215));
+
+        horizontalLayout_13->addWidget(pb_Select_As_2nd_Edge_For_Chord);
+
+
+        verticalLayout_14->addLayout(horizontalLayout_13);
+
+
+        verticalLayout_16->addWidget(groupBox_5);
 
         pb_Show_Chord_Info_For_CO = new QPushButton(page_3);
         pb_Show_Chord_Info_For_CO->setObjectName(QString::fromUtf8("pb_Show_Chord_Info_For_CO"));
 
-        verticalLayout_14->addWidget(pb_Show_Chord_Info_For_CO);
+        verticalLayout_16->addWidget(pb_Show_Chord_Info_For_CO);
 
         pb_Clear_Selection_For_CO = new QPushButton(page_3);
         pb_Clear_Selection_For_CO->setObjectName(QString::fromUtf8("pb_Clear_Selection_For_CO"));
 
-        verticalLayout_14->addWidget(pb_Clear_Selection_For_CO);
+        verticalLayout_16->addWidget(pb_Clear_Selection_For_CO);
 
         verticalSpacer_3 = new QSpacerItem(20, 355, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
-        verticalLayout_14->addItem(verticalSpacer_3);
+        verticalLayout_16->addItem(verticalSpacer_3);
 
         toolBox->addItem(page_3, QString::fromUtf8("Chord\346\223\215\344\275\234"));
         page_4 = new QWidget();
         page_4->setObjectName(QString::fromUtf8("page_4"));
-        page_4->setGeometry(QRect(0, 0, 147, 433));
+        page_4->setGeometry(QRect(0, 0, 126, 224));
         verticalLayout_12 = new QVBoxLayout(page_4);
         verticalLayout_12->setSpacing(6);
         verticalLayout_12->setContentsMargins(11, 11, 11, 11);
@@ -881,7 +920,7 @@ public:
         radioButton_Smooth_Faces_For_MO->raise();
         page_16 = new QWidget();
         page_16->setObjectName(QString::fromUtf8("page_16"));
-        page_16->setGeometry(QRect(0, 0, 147, 433));
+        page_16->setGeometry(QRect(0, 0, 110, 192));
         verticalLayout_17 = new QVBoxLayout(page_16);
         verticalLayout_17->setSpacing(6);
         verticalLayout_17->setContentsMargins(11, 11, 11, 11);
@@ -1003,6 +1042,10 @@ public:
         pushButton_Select_Edges_OK_For_CO->setText(QApplication::translate("MeshEditController", "\351\200\211\346\213\251\347\273\223\346\235\237", 0, QApplication::UnicodeUTF8));
         label_4->setText(QApplication::translate("MeshEditController", "\347\264\242\345\274\225\351\200\211\346\213\251\357\274\232", 0, QApplication::UnicodeUTF8));
         pb_Select_Chord_By_Idx_For_CO->setText(QApplication::translate("MeshEditController", "\347\241\256\345\256\232", 0, QApplication::UnicodeUTF8));
+        groupBox_5->setTitle(QApplication::translate("MeshEditController", "\350\260\203\346\225\264\347\216\257\345\275\242chord\346\226\271\345\220\221", 0, QApplication::UnicodeUTF8));
+        pb_Select_Edge_For_Adjust_Chord->setText(QApplication::translate("MeshEditController", "\351\200\211\346\213\251\350\276\271", 0, QApplication::UnicodeUTF8));
+        pb_Select_As_1st_Edge_For_Chord->setText(QApplication::translate("MeshEditController", "\347\254\254\344\270\200\346\235\241\350\276\271", 0, QApplication::UnicodeUTF8));
+        pb_Select_As_2nd_Edge_For_Chord->setText(QApplication::translate("MeshEditController", "\347\254\254\344\272\214\346\235\241\350\276\271", 0, QApplication::UnicodeUTF8));
         pb_Show_Chord_Info_For_CO->setText(QApplication::translate("MeshEditController", "\346\230\276\347\244\272chord\344\277\241\346\201\257", 0, QApplication::UnicodeUTF8));
         pb_Clear_Selection_For_CO->setText(QApplication::translate("MeshEditController", "\346\270\205\351\231\244\351\200\211\346\213\251", 0, QApplication::UnicodeUTF8));
         toolBox->setItemText(toolBox->indexOf(page_3), QApplication::translate("MeshEditController", "Chord\346\223\215\344\275\234", 0, QApplication::UnicodeUTF8));

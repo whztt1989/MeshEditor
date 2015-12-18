@@ -113,8 +113,8 @@ bool oil_auto_deduce_constant_quad_set (OneIntLoopInput &oil_input, OneIntLoopIn
 	if (oil_input.face_of_constant == NULL) return false;
 	auto mesh = oil_input.mesh;
 
-	assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	oil_input.constant_fhs.clear ();
 
@@ -228,7 +228,7 @@ bool oil_analyze_input_ehs (OneIntLoopInput &oil_input, OneIntLoopIntermedia &oi
 bool oil_deduce_interface_fhs (OneIntLoopInput &oil_input, OneIntLoopIntermedia &oil_mid)
 {
 	auto mesh = oil_input.mesh;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 	oil_mid.face_of_input_ehs = NULL;
 	foreach (OvmEgH eh, oil_input.input_ehs){
 		OvmVeH vh1 = mesh->edge (eh).from_vertex (),
@@ -339,7 +339,7 @@ bool oil_deduce_allowed_fhs (OneIntLoopInput &oil_input, OneIntLoopIntermedia &o
 
 	VolumeMesh *mesh = oil_input.mesh;
 	auto &modify_allowed_fhs = oil_input.modify_allowed_fhs;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	std::set<FACE*> vhs_on_faces, adj_faces;
 	foreach (OvmEgH eh, oil_input.input_ehs){
@@ -597,12 +597,12 @@ bool _analyze_input_edges (OneIntLoopInput &oil_input, OneIntLoopIntermedia &oil
 	VolumeMesh *mesh = oil_input.mesh;
 	auto &input_ehs = oil_input.input_ehs;
 
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")){
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")){
 			oil_mid.last_err_str = QObject::tr ("网格节点没有关联集合实体！");
 			return false;
 	}
 
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	//对输入边上的点相连接的边进行统计
 	auto &vh_adj_ehs_mapping = oil_mid.vh_adj_ehs_mapping;

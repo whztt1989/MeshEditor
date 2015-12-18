@@ -102,6 +102,24 @@ namespace JC{
 		else
 			return false;
 	}
+	template <typename T, typename T1>
+	bool contains (std::map<T, T1> &container, T &val)
+	{
+		if (container.find (val) != container.end ())
+			return true;
+		else
+			return false;
+	}
+
+	template <typename T, typename T1>
+	bool contains (std::hash_map<T, T1> &container, T &val)
+	{
+		if (container.find (val) != container.end ())
+			return true;
+		else
+			return false;
+	}
+
 	template <typename Container, typename T>
 	bool contains (Container *container, T &val)
 	{
@@ -227,6 +245,7 @@ namespace JC{
 	bool save_volume_mesh (VolumeMesh *mesh, QString mesh_path);
 	BODY* load_acis_model (QString file_path);
 	void save_acis_entity(ENTITY *entity, const char * file_name);
+	void save_acis_entity(ENTITY *entity, QString file_name);
 
 	void render_volume_mesh (VolumeMesh *mesh);
 	void render_hexa_set (VolumeMesh *mesh, std::unordered_set<OvmCeH> &chs);
@@ -320,6 +339,7 @@ namespace JC{
 	OvmFaH get_common_face_handle (VolumeMesh *mesh, OvmCeH &ch1, OvmCeH &ch2);
 	OvmVeH get_common_vertex_handle (VolumeMesh *mesh, OvmEgH eh1, OvmEgH eh2);
 	OvmEgH get_common_edge_handle (VolumeMesh *mesh, OvmFaH fh1, OvmFaH fh2);
+	OvmFaH get_common_face_handle (VolumeMesh *mesh, OvmEgH eh1, OvmEgH eh2);
 
 	//从一组首尾相连的网格边中得到一个方向的半边
 	void get_piecewise_halfedges_from_edges (VolumeMesh *mesh, std::vector<OvmEgH> &ehs, bool forward,
@@ -341,7 +361,7 @@ namespace JC{
 	std::unordered_set<OvmFaH> get_fhs_on_acis_faces (VolumeMesh *mesh, std::set<FACE *> acis_face);
 
 	FACE * get_associated_geometry_face_of_boundary_fh (VolumeMesh *mesh, OvmFaH fh);
-	EDGE * get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh, OpenVolumeMesh::VertexPropertyT<unsigned long> &V_ENTITY_PTR);
+	EDGE * get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh, OpenVolumeMesh::VertexPropertyT<unsigned int> &V_ENTITY_PTR);
 	EDGE * get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh);
 
 	void optimize_shrink_set (VolumeMesh *mesh, std::unordered_set<OvmCeH> &hexa_set, 
@@ -362,6 +382,8 @@ namespace JC{
 
 	void retrieve_chords (VolumeMesh *mesh, std::unordered_set<OvmFaH> &fhs, ChordSet &chord_set);
 	void retrieve_sheets (VolumeMesh *mesh, SheetSet &sheet_set);
+	//从文件加载后，如果文件中保存了对偶结构，则可以直接恢复
+	void restore_sheets_from_file (VolumeMesh *mesh, SheetSet &sheet_set);
 	DualColumn * retrieve_column (VolumeMesh *mesh, OvmFaH seed_fh);
 	std::set<DualColumn *> retrieve_columns (VolumeMesh *mesh, DualSheet *self_int_sheet);
 	std::set<DualColumn *> retrieve_columns (VolumeMesh *mesh, SheetSet &sheet_set);

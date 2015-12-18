@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include "mesheditwidget.h"
 
 void MeshEditWidget::on_select_edges_ok_for_auto_lsi ()
@@ -13,7 +13,7 @@ void MeshEditWidget::on_select_edges_ok_for_auto_lsi ()
 	if (completed_loop_ehs.empty ()){
 		std::vector<OvmEgH> selected_ehs;
 		if (!hoopsview->get_selected_elements (std::vector<OvmVeH>(), selected_ehs, std::vector<OvmFaH> ())){
-			QMessageBox::warning (this, tr("¾¯¸æ"), tr("Î´Ñ¡ÖÐÈÎºÎÍø¸ñ±ß£¡"), QMessageBox::Ok);
+			QMessageBox::warning (this, tr("è­¦å‘Š"), tr("æœªé€‰ä¸­ä»»ä½•ç½‘æ ¼è¾¹ï¼"), QMessageBox::Ok);
 			return;
 		}
 		JC::vector_to_unordered_set (selected_ehs, selected_ehs_set);
@@ -24,7 +24,7 @@ void MeshEditWidget::on_select_edges_ok_for_auto_lsi ()
 	//selected_ehs = selected_ehs_set;
 
 	if (!ossi_handler->analyze_input_edges (selected_ehs_set)){
-		QMessageBox::critical (this, tr("´íÎó"), ossi_handler->get_last_err (), QMessageBox::Ok);
+		QMessageBox::critical (this, tr("é”™è¯¯"), ossi_handler->get_last_err (), QMessageBox::Ok);
 		return;
 	}
 
@@ -33,7 +33,7 @@ void MeshEditWidget::on_select_edges_ok_for_auto_lsi ()
 		ui.pushButton_Set_Depth_Control_For_Auto_LSI->setEnabled (true);
 
 		FACE *inter_face = NULL;
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 		foreach (OvmEgH eh, selected_ehs_set){
 			OvmVeH vh1 = mesh->edge (eh).from_vertex (),
 				vh2 = mesh->edge (eh).to_vertex ();
@@ -48,7 +48,7 @@ void MeshEditWidget::on_select_edges_ok_for_auto_lsi ()
 			}
 		}
 		if (inter_face == NULL){
-			QMessageBox::critical (this, tr("´íÎó£¡"), tr ("ÕÒ²»µ½ÊäÈëÍø¸ñ±ßËùÔÚµÄ¼¸ºÎÃæ£¡ÎÞ·¨ÍÆµ¼£¡"));
+			QMessageBox::critical (this, tr("é”™è¯¯ï¼"), tr ("æ‰¾ä¸åˆ°è¾“å…¥ç½‘æ ¼è¾¹æ‰€åœ¨çš„å‡ ä½•é¢ï¼æ— æ³•æŽ¨å¯¼ï¼"));
 			return;
 		}
 
@@ -179,7 +179,7 @@ void MeshEditWidget::on_get_surf_patches_for_auto_lsi ()
 void MeshEditWidget::on_set_depth_control_for_auto_lsi ()
 {
 	bool ok = false;
-	int min_depth = QInputDialog::getInt (this, tr("Éî¶È¿ØÖÆ"), tr("ÇëÊäÈë×îÐ¡Éî¶È"), 4, 1, 1000, 1, &ok);
+	int min_depth = QInputDialog::getInt (this, tr("æ·±åº¦æŽ§åˆ¶"), tr("è¯·è¾“å…¥æœ€å°æ·±åº¦"), 4, 1, 1000, 1, &ok);
 	if (!ok) return;
 	ossi_handler->set_minimum_depth (min_depth);
 }
@@ -188,11 +188,11 @@ void MeshEditWidget::on_select_constant_faces_ok_for_auto_lsi ()
 {
 	std::vector<OvmFaH> selected_fhs;
 	if (!hoopsview->get_selected_elements (std::vector<OvmVeH>(), std::vector<OvmEgH>(), selected_fhs)){
-		QMessageBox::warning (this, tr("¾¯¸æ"), tr("Î´Ñ¡ÖÐÈÎºÎÍø¸ñÃæ£¡"), QMessageBox::Ok);
+		QMessageBox::warning (this, tr("è­¦å‘Š"), tr("æœªé€‰ä¸­ä»»ä½•ç½‘æ ¼é¢ï¼"), QMessageBox::Ok);
 		return;
 	}
 	FACE *constant_face = NULL;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	foreach (auto &fh, selected_fhs){
 		auto adj_vhs = JC::get_adj_vertices_around_face (mesh, fh);
@@ -223,7 +223,7 @@ void MeshEditWidget::on_get_hexa_set_for_auto_lsi ()
 {
 	auto hexa_set = ossi_handler->get_hexa_set ();
 	if (hexa_set.empty ()){
-		QMessageBox::critical (this, tr("´íÎó"), ossi_handler->get_last_err (), QMessageBox::Ok);
+		QMessageBox::critical (this, tr("é”™è¯¯"), ossi_handler->get_last_err (), QMessageBox::Ok);
 		return;
 	}
 
@@ -242,7 +242,7 @@ void MeshEditWidget::on_get_quad_set_for_auto_lsi ()
 {
 	auto fhs_for_inflation = ossi_handler->get_inflation_fhs ();
 	if (fhs_for_inflation.empty ()){
-		QMessageBox::critical (this, tr("´íÎó"), ossi_handler->get_last_err (), QMessageBox::Ok);
+		QMessageBox::critical (this, tr("é”™è¯¯"), ossi_handler->get_last_err (), QMessageBox::Ok);
 		return;
 	}
 
@@ -269,7 +269,7 @@ void MeshEditWidget::on_sheet_inflate_for_auto_lsi ()
 {
 	auto new_sheet = ossi_handler->sheet_inflation ();
 	if (!new_sheet){
-		QMessageBox::critical (this, tr("´íÎó"), ossi_handler->get_last_err (), QMessageBox::Ok);
+		QMessageBox::critical (this, tr("é”™è¯¯"), ossi_handler->get_last_err (), QMessageBox::Ok);
 		return;
 	}
 

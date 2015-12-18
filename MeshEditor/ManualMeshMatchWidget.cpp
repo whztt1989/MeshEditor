@@ -7,13 +7,14 @@
 #include <QDir>
 #include <QProgressDialog>
 #include "rgbcolor.hxx"
+#include <at_int.hxx>
 
 ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
-	body1 = body2 = NULL;
-	hoopsview1 = ui.hoopsview1; hoopsview2 = ui.hoopsview2;
+	hoopsview1 = ui.hoopsview1; 
+	hoopsview2 = ui.hoopsview2;
 	mesh_edit_controller1 = ui.mesh_edit_controller1;
 	mesh_edit_controller2 = ui.mesh_edit_controller2;
 	//assembly_viewer = new MeshMatchAssemblyViewer (this);
@@ -25,7 +26,7 @@ ManualMeshMatchWidget::ManualMeshMatchWidget(QWidget *parent)
 	chord_match_widget->setWindowFlags (Qt::Tool);
 	chord_match_widget->hide ();
 	prev_sel_chord1 = prev_sel_chord2 = NULL;
-	mm_handler = new MeshMatchingHandler;
+	mm_handler = new MeshMatchingHandler (this);
 
 	connect (chord_match_widget, SIGNAL (chord_pair_highlight (uint, uint)),
 		SLOT (on_highlight_chord_pair (uint, uint)));
@@ -95,139 +96,106 @@ VolumeMesh *combine_meshes (VolumeMesh *mesh1, VolumeMesh *mesh2, std::unordered
 
 void ManualMeshMatchWidget::on_open2 ()
 {
-	dir_str = QFileDialog::getExistingDirectory (this, tr("选择模型所在文件夹"));
-	auto fGetLeftChs = [] (VolumeMesh *whole_mesh, BODY *match_body)->std::unordered_set<OvmCeH>{
-		std::unordered_set<OvmCeH> left_chs;
-		for (auto c_it = whole_mesh->cells_begin (); c_it != whole_mesh->cells_end (); ++c_it){
-			auto centre_pt = whole_mesh->barycenter (*c_it);
-			SPAposition acis_pos = POS2SPA(centre_pt);
-			point_containment pc;
-			api_point_in_body (acis_pos, match_body, pc);
-			if (pc == point_inside) continue;
-			left_chs.insert (*c_it);
-		}
+	//dir_str = QFileDialog::getExistingDirectory (this, tr("选择模型所在文件夹"));
+	//auto fGetLeftChs = [] (VolumeMesh *whole_mesh, BODY *match_body)->std::unordered_set<OvmCeH>{
+	//	std::unordered_set<OvmCeH> left_chs;
+	//	for (auto c_it = whole_mesh->cells_begin (); c_it != whole_mesh->cells_end (); ++c_it){
+	//		auto centre_pt = whole_mesh->barycenter (*c_it);
+	//		SPAposition acis_pos = POS2SPA(centre_pt);
+	//		point_containment pc;
+	//		api_point_in_body (acis_pos, match_body, pc);
+	//		if (pc == point_inside) continue;
+	//		left_chs.insert (*c_it);
+	//	}
 
-		return left_chs;
-	};
+	//	return left_chs;
+	//};
 
-	if (dir_str != ""){
-		QString part1mesh = dir_str + "\\part1.ovm",
-			part2mesh = dir_str + "\\part2.ovm",
-			part1body = dir_str + "\\part1.sat",
-			part2body = dir_str + "\\part2.sat",
-			cylinderbody = dir_str + "\\cylinder.SAT",
-			cylinder_mesh = dir_str + "\\cylinder.ovm";
+	//if (dir_str != ""){
+	//	QString part1mesh = dir_str + "\\part1.ovm",
+	//		part2mesh = dir_str + "\\part2.ovm",
+	//		part1body = dir_str + "\\part1.sat",
+	//		part2body = dir_str + "\\part2.sat",
+	//		cylinderbody = dir_str + "\\cylinder.SAT",
+	//		cylinder_mesh = dir_str + "\\cylinder.ovm";
 
-		mesh1 = JC::load_volume_mesh (part1mesh.toAscii ().data ());
-		mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
-		auto cy_mesh = JC::load_volume_mesh (cylinder_mesh.toAscii ().data ());
-		body1 = JC::load_acis_model (part1body);
-		body2 = JC::load_acis_model (part2body);
-		BODY *cylinder = JC::load_acis_model (cylinderbody);
-		auto block_chs = fGetLeftChs (mesh1, cylinder);
-		//for (auto c_it = mesh1->cells_begin (); c_it != mesh1->cells_end (); ++c_it){
-		//	if (!JC::contains (cylinder_chs, *c_it))
-		//		block_chs.insert (*c_it);
-		//}
+	//	mesh1 = JC::load_volume_mesh (part1mesh.toAscii ().data ());
+	//	mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
+	//	auto cy_mesh = JC::load_volume_mesh (cylinder_mesh.toAscii ().data ());
+	//	body1 = JC::load_acis_model (part1body);
+	//	body2 = JC::load_acis_model (part2body);
+	//	BODY *cylinder = JC::load_acis_model (cylinderbody);
+	//	auto block_chs = fGetLeftChs (mesh1, cylinder);
+	//	//for (auto c_it = mesh1->cells_begin (); c_it != mesh1->cells_end (); ++c_it){
+	//	//	if (!JC::contains (cylinder_chs, *c_it))
+	//	//		block_chs.insert (*c_it);
+	//	//}
 
-		//QMessageBox::information (this, "INFO", QString("cy %1 bl %2").arg (cylinder_chs.size ()).arg (block_chs.size ()));
-		//common_interface = get_interface ();
+	//	//QMessageBox::information (this, "INFO", QString("cy %1 bl %2").arg (cylinder_chs.size ()).arg (block_chs.size ()));
+	//	//common_interface = get_interface ();
 
-		HC_Open_Segment ("/match models");{
-			mesh1key = HC_Open_Segment ("");{
-				HC_Set_Rendering_Options ("no lighting interpolation");
-				HC_Set_Color ("faces=green");
-				//HC_Translate_Object (0, 10, 0);
-				//JC::render_volume_mesh_boundary (mesh1);
+	//	HC_Open_Segment ("/match models");{
+	//		mesh1key = HC_Open_Segment ("");{
+	//			HC_Set_Rendering_Options ("no lighting interpolation");
+	//			HC_Set_Color ("faces=green");
+	//			//HC_Translate_Object (0, 10, 0);
+	//			//JC::render_volume_mesh_boundary (mesh1);
 
-				JC::render_volume_mesh (cy_mesh);
-			}HC_Close_Segment ();
-			mesh2key = HC_Open_Segment ("");{
-				HC_Set_Rendering_Options ("no lighting interpolation");
-				HC_Set_Color ("faces=grey");
-				//HC_Translate_Object (0, -10, 0);
-				JC::render_volume_mesh_boundary (mesh2);
-			}HC_Close_Segment ();
+	//			JC::render_volume_mesh (cy_mesh);
+	//		}HC_Close_Segment ();
+	//		mesh2key = HC_Open_Segment ("");{
+	//			HC_Set_Rendering_Options ("no lighting interpolation");
+	//			HC_Set_Color ("faces=grey");
+	//			//HC_Translate_Object (0, -10, 0);
+	//			JC::render_volume_mesh_boundary (mesh2);
+	//		}HC_Close_Segment ();
 
-		}HC_Close_Segment ();
+	//	}HC_Close_Segment ();
 
-		HC_Open_Segment_By_Key (hoopsview1->GetHoopsView ()->GetModelKey ());{
-			HC_Open_Segment ("meshes");{
-				HC_Set_Visibility ("markers=off,lines=on,faces=on");
-				HC_Include_Segment_By_Key (mesh1key);
-				JC::render_hexa_set (mesh1, block_chs);
+	//	HC_Open_Segment_By_Key (hoopsview1->GetHoopsView ()->GetModelKey ());{
+	//		HC_Open_Segment ("meshes");{
+	//			HC_Set_Visibility ("markers=off,lines=on,faces=on");
+	//			HC_Include_Segment_By_Key (mesh1key);
+	//			JC::render_hexa_set (mesh1, block_chs);
 
-			}HC_Close_Segment ();
+	//		}HC_Close_Segment ();
 
-		}HC_Close_Segment ();
-		hoopsview1->GetHoopsView ()->SetGeometryChanged ();
-		hoopsview1->GetHoopsView ()->ZoomToExtents ();
-		hoopsview1->GetHoopsView ()->Update ();
+	//	}HC_Close_Segment ();
+	//	hoopsview1->GetHoopsView ()->SetGeometryChanged ();
+	//	hoopsview1->GetHoopsView ()->ZoomToExtents ();
+	//	hoopsview1->GetHoopsView ()->Update ();
 
-		HC_Open_Segment_By_Key (hoopsview2->GetHoopsView ()->GetModelKey ());{
-			HC_Open_Segment ("meshes");{
-				HC_Set_Visibility ("markers=off,lines=on,faces=on");
-				HC_Include_Segment_By_Key (mesh2key);
-			}HC_Close_Segment ();
-		}HC_Close_Segment ();
+	//	HC_Open_Segment_By_Key (hoopsview2->GetHoopsView ()->GetModelKey ());{
+	//		HC_Open_Segment ("meshes");{
+	//			HC_Set_Visibility ("markers=off,lines=on,faces=on");
+	//			HC_Include_Segment_By_Key (mesh2key);
+	//		}HC_Close_Segment ();
+	//	}HC_Close_Segment ();
 
-		//	//HC_Include_Segment_By_Key (body2key);
-		//}HC_Close_Segment ();
-		hoopsview2->GetHoopsView ()->SetGeometryChanged ();
-		hoopsview2->GetHoopsView ()->ZoomToExtents ();
-		hoopsview2->GetHoopsView ()->Update ();
+	//	//	//HC_Include_Segment_By_Key (body2key);
+	//	//}HC_Close_Segment ();
+	//	hoopsview2->GetHoopsView ()->SetGeometryChanged ();
+	//	hoopsview2->GetHoopsView ()->ZoomToExtents ();
+	//	hoopsview2->GetHoopsView ()->Update ();
 
-		mesh_edit_controller1->mesh = mesh1;
-		mesh_edit_controller1->hoopsview = hoopsview1;
-		mesh_edit_controller1->body = body1;
+	//	mesh_edit_controller1->mesh = mesh1;
+	//	mesh_edit_controller1->hoopsview = hoopsview1;
+	//	mesh_edit_controller1->body = body1;
 
-		mesh_edit_controller2->mesh = mesh2;
-		mesh_edit_controller2->hoopsview = hoopsview2;
-		mesh_edit_controller2->body = body2;
-	}
+	//	mesh_edit_controller2->mesh = mesh2;
+	//	mesh_edit_controller2->hoopsview = hoopsview2;
+	//	mesh_edit_controller2->body = body2;
+	//}
 }
 
 void ManualMeshMatchWidget::on_open ()
 {
-	dir_str = QFileDialog::getExistingDirectory (this, tr("选择模型所在文件夹"));
+	auto dir_str = QFileDialog::getExistingDirectory (this, tr("选择模型所在文件夹"));
 
 	if (dir_str != ""){
-		QString part1mesh = dir_str + "\\part1.ovm",
-			part1body = dir_str + "\\part1.sat",
-			part2mesh = dir_str + "\\part2.ovm",
-			part2body = dir_str + "\\part2.sat",
-			chord_pairs_path = dir_str + "\\matched_chord_pairs.dat";
-
-		QFileInfo fi1 (part1mesh), fi2 (part1body), fi3 (part2mesh), fi4 (part2body);
-		if (!fi1.exists () || !fi2.exists () || !fi3.exists () || !fi4.exists ()){
-			QMessageBox::warning (this, tr("错误"), tr("打不开文件！"));
+		if (!mm_handler->load_mesh_matching_data (dir_str)){
+			QMessageBox::warning (this, "错误", "加载文件错误！");
 			return;
-		}
-
-		mesh1 = JC::load_volume_mesh (part1mesh.toAscii ().data ());
-		body1 = JC::load_acis_model (part1body);
-		mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
-		body2 = JC::load_acis_model (part2body);
-
-		if (mesh1->vertex_property_exists <unsigned long> ("entityptr")){
-			QMessageBox::critical (this, "OK", "property exists！");
-			return;
-		}
-		all_interfaces = get_interfaces ();
-		if (all_interfaces.empty ()){
-			QMessageBox::critical (this, "错误", "两个模型没有贴合部分！");
-			delete mesh1; delete  mesh2;
-			mesh1 = mesh2 = NULL;
-			return;
-		}
-
-		common_interfaces.clear (); interfaces1.clear (); interfaces2.clear ();
-		ENTITY_LIST intf_list1, intf_list2;
-		foreach (auto &p, all_interfaces){
-			interfaces1.insert (p.first);
-			interfaces2.insert (p.second);
-			intf_list1.add (p.first); intf_list2.add (p.second);
-			common_interfaces.insert (p.first);
 		}
 
 
@@ -331,25 +299,27 @@ void ManualMeshMatchWidget::on_open ()
 			JC::init_volume_mesh (mesh, body, SPAresabs * 1000, &left_vhs);
 		};
 
-		fSetupHoopsView (mesh_edit_controller1, hoopsview1, mesh1, body1, interfaces1);
-		fSetupHoopsView (mesh_edit_controller2, hoopsview2, mesh2, body2, interfaces2);
+		fSetupHoopsView (mesh_edit_controller1, hoopsview1, mm_handler->mesh1 (), mm_handler->body1 (), mm_handler->interfaces1 ());
+		fSetupHoopsView (mesh_edit_controller2, hoopsview2, mm_handler->mesh2 (), mm_handler->body2 (), mm_handler->interfaces2 ());
 
-
-		mm_handler->set_interfaces (common_interfaces);
-		mm_handler->set_part1 (mesh1, JC::get_fhs_on_acis_faces (mesh1, interfaces1));
-		mm_handler->set_part2 (mesh2, JC::get_fhs_on_acis_faces (mesh2, interfaces2));
+		draw_matched_chords (mm_handler->matched_chord_pairs);
 		//debug
 		mm_handler->set_hoopsview1 (hoopsview1);
 		mm_handler->set_hoopsview2 (hoopsview2);
 
-		QFileInfo matched_chord_pairs_file (chord_pairs_path);
-		if (matched_chord_pairs_file.exists ()){
-			if (!mm_handler->load_matched_chords (chord_pairs_path)){
-				QMessageBox::warning (this, tr("错误"), tr("chord匹配文件存在但是读取错误！"));
-				//for(;;) 
-					//mm_handler->load_matched_chords (chord_pairs_path);
-			}else{
-				draw_matched_chords (mm_handler->matched_chord_pairs);
+		auto mm_data1 = mm_handler->mm_data1,
+			mm_data2 = mm_handler->mm_data2;
+		foreach (auto ehs, mm_data1->ordered_ehs_on_edges){
+			auto ordered_ehs = ehs.second;
+			if (ordered_ehs.size () ==1 && ordered_ehs.front () == OvmEgH(-1)){
+				hoopsview1->render_one_acis_edge (ehs.first);
+			}
+		}
+
+		foreach (auto ehs, mm_data2->ordered_ehs_on_edges){
+			auto ordered_ehs = ehs.second;
+			if (ordered_ehs.size () ==1 && ordered_ehs.front () == OvmEgH(-1)){
+				hoopsview2->render_one_acis_edge (ehs.first);
 			}
 		}
 
@@ -441,10 +411,6 @@ void ManualMeshMatchWidget::on_show_right ()
 void ManualMeshMatchWidget::on_init_matching ()
 {
 	mm_handler->init_match ();
-	
-	unmatched_chords1 = mm_handler->unmatched_chord_set1;
-	unmatched_chords2 = mm_handler->unmatched_chord_set2;
-
 	draw_matched_chords (mm_handler->matched_chord_pairs);
 }
 
@@ -452,99 +418,6 @@ void ManualMeshMatchWidget::on_update_matched_chords ()
 {
 	draw_matched_chords (mm_handler->matched_chord_pairs);
 }
-
-bool face_coincident (FACE *f1, FACE *f2, double myresabs)
-{
-	ENTITY_LIST vertices1, vertices2;
-	api_get_vertices (f1, vertices1); api_get_vertices (f2, vertices2);
-	std::vector<VERTEX*> std_vertices1, std_vertices2;
-	JC::entity_list_to_vector (vertices1, std_vertices1);
-	JC::entity_list_to_vector (vertices2, std_vertices2);
-
-	//check vertices
-	foreach (VERTEX *v1, std_vertices1){
-		auto pFuncFindCoincidentVertex = [&v1, &myresabs](const VERTEX *v2)-> bool{
-			SPAposition pos1 = v1->geometry ()->coords (),
-				pos2 = v2->geometry ()->coords();
-			return (same_point (pos1, pos2, myresabs));
-		};
-		auto locate = std::find_if (std_vertices2.begin (), std_vertices2.end (), pFuncFindCoincidentVertex);
-		if (locate != std_vertices2.end ())
-			std_vertices2.erase (locate);
-		else return false;
-	}
-
-	//check edges
-	ENTITY_LIST edges1, edges2;
-	api_get_edges (f1, edges1); api_get_edges (f2,edges2);
-	std::vector<SPAposition> mid_positions1, mid_positions2;
-	std::vector<EDGE*> std_edges1, std_edges2;
-	JC::entity_list_to_vector (edges1, std_edges1);
-	JC::entity_list_to_vector (edges2, std_edges2);
-	std::for_each (std_edges1.begin (), std_edges1.end (), [&mid_positions1](EDGE*e){mid_positions1.push_back (e->mid_pos ());});
-	std::for_each (std_edges2.begin (), std_edges2.end (), [&mid_positions2](EDGE*e){mid_positions2.push_back (e->mid_pos ());});
-	foreach (SPAposition p1, mid_positions1){
-		auto pFuncFindCoincidentPoint = [&p1, &myresabs](SPAposition p2)-> bool{
-			return (same_point (p1, p2, myresabs));
-		};
-		auto locate = std::find_if (mid_positions2.begin (), mid_positions2.end (), pFuncFindCoincidentPoint);
-		if (locate != mid_positions2.end ())
-			mid_positions2.erase (locate);
-		else
-			return false;
-	}
-	return true;
-}
-
-std::vector<std::pair<FACE*, FACE*> > find_interface (BODY *body1, BODY *body2, double myresabs)
-{
-	std::pair<FACE*, FACE*> intf_pair;
-	intf_pair.first = intf_pair.second = NULL;
-	std::vector<std::pair<FACE*, FACE*> > pairs;
-	ENTITY_LIST face_list1, face_list2;
-	api_get_faces (body1, face_list1); api_get_faces (body2, face_list2);
-	for (int i = 0; i != face_list1.count (); ++i){
-		FACE *f1 = (FACE*)face_list1[i];
-		for (int j = 0; j != face_list2.count (); ++j){
-			FACE *f2 = (FACE*)face_list2[j];
-			if (face_coincident (f1, f2, myresabs)){
-				intf_pair.first = f1; intf_pair.second = f2;
-				pairs.push_back (intf_pair);
-			}
-		}
-	}
-	return pairs;
-}
-
-std::set<std::pair<FACE *, FACE*> > ManualMeshMatchWidget::get_interfaces ()
-{
-	std::set<std::pair<FACE *, FACE*> > interfaces;
-	logical is_touch;
-	api_entity_entity_touch (body1, body2, is_touch);
-	if (is_touch == FALSE){
-		QMessageBox::warning (this, "错误", "两个模型没有接触面！");
-		return interfaces;
-	}
-	BoolOptions boolopts;
-	boolopts.set_near_coincidence_fuzz (SPAresabs * 1000);
-	api_initialize_booleans ();
-	ENTITY_LIST faces_list1, faces_list2;
-	std::vector<FACE*> faces1, faces2;
-	outcome o = api_imprint (body2, body1, &boolopts);
-	if (!o.ok ()){
-		auto str = o.get_error_info ()->error_message ();
-		str = str;
-	}
-	api_terminate_booleans ();
-
-	auto interface_pairs = find_interface (body1, body2, SPAresabs * 1000);
-
-	JC::vector_to_set (interface_pairs, interfaces);
-
-	return interfaces;
-}
-
-
 
 void ManualMeshMatchWidget::on_match_two_chords ()
 {
@@ -643,6 +516,8 @@ void ManualMeshMatchWidget::on_delete_chord_pair (uint chord_ptr1, uint chord_pt
 	prev_sel_chord1 = NULL;
 	prev_sel_chord2 = NULL;
 	draw_matched_chords (mm_handler->matched_chord_pairs);
+	hoopsview1->derender_mesh_groups ("tmp", "ordered ehs");
+	hoopsview2->derender_mesh_groups ("tmp", "ordered ehs");
 }
 
 void ManualMeshMatchWidget::on_close_chord_pair_widget ()
@@ -665,15 +540,10 @@ void ManualMeshMatchWidget::on_save ()
 	}
 
 
-	JC::save_volume_mesh (mesh1, dir_path + "/part1.ovm");
-	JC::save_volume_mesh (mesh2, dir_path + "/part2.ovm");
-	JC::save_acis_entity (body1, QString(dir_path + "/part1.sat")
-		.toAscii ().data ());
-	JC::save_acis_entity (body2, QString(dir_path + "/part2.sat")
-		.toAscii ().data ());
-
-	mm_handler->save_matched_chords (dir_path + "/matched_chord_pairs.dat");
-	QMessageBox::information (this, tr("提醒"), tr("保存成功！"));
+	if (!mm_handler->save_mesh_matching_data (dir_path))
+		QMessageBox::warning (this, tr("错误"), tr("保存失败！"));
+	else
+		QMessageBox::information (this, tr("提醒"), tr("保存成功！"));
 }
 
 DualChord *ManualMeshMatchWidget::get_matched_chord (DualChord *chord)
@@ -691,7 +561,7 @@ void ManualMeshMatchWidget::on_get_polyline ()
 	}
 	auto chord_to_match = chord1? chord1 : chord2;
 	auto hoopsview_to_draw = chord1? hoopsview2 : hoopsview1;
-	auto mesh = chord1? mesh2 : mesh1;
+	auto mesh = chord1? mm_handler->mesh2 () : mm_handler->mesh1 ();
 
 	auto cpd = mm_handler->get_chord_pos_desc (chord_to_match);
 	auto trans_cpd = mm_handler->translate_chord_pos_desc (cpd);
@@ -745,97 +615,97 @@ void ManualMeshMatchWidget::on_get_polyline ()
 
 void ManualMeshMatchWidget::on_auto_match ()
 {
-	hoopsview1->derender_all_chords ();
-	hoopsview2->derender_all_chords ();
+	//hoopsview1->derender_all_chords ();
+	//hoopsview2->derender_all_chords ();
 
-	if (dir_str.isEmpty () || dir_str == "") return;
-	auto matching_dir_str = dir_str + "/matching/";
-	QDir matching_dir (matching_dir_str);
-	if (!matching_dir.exists ()) return;
+	//if (dir_str.isEmpty () || dir_str == "") return;
+	//auto matching_dir_str = dir_str + "/matching/";
+	//QDir matching_dir (matching_dir_str);
+	//if (!matching_dir.exists ()) return;
 
-	matching_dir.setFilter(QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
-	QFileInfoList list = matching_dir.entryInfoList();
+	//matching_dir.setFilter(QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+	//QFileInfoList list = matching_dir.entryInfoList();
 
-	int subdir_count = list.count();
-	if(subdir_count <= 0)
-		return;
+	//int subdir_count = list.count();
+	//if(subdir_count <= 0)
+	//	return;
 
-	std::vector<QString> subdir_strs;
-	for(int i = 0; i != subdir_count; ++i){
-		QFileInfo file_info = list.at(i);
-		QString subdir_path_str = file_info.filePath();
-		subdir_strs.push_back (subdir_path_str);
-	}
+	//std::vector<QString> subdir_strs;
+	//for(int i = 0; i != subdir_count; ++i){
+	//	QFileInfo file_info = list.at(i);
+	//	QString subdir_path_str = file_info.filePath();
+	//	subdir_strs.push_back (subdir_path_str);
+	//}
 
-	foreach (auto str, subdir_strs){
-		QString part1mesh = str + "\\part1.ovm",
-			part2mesh = str + "\\part2.ovm";
+	//foreach (auto str, subdir_strs){
+	//	QString part1mesh = str + "\\part1.ovm",
+	//		part2mesh = str + "\\part2.ovm";
 
-		delete mesh1; delete mesh2;
-		mesh1 = JC::load_volume_mesh (part1mesh.toAscii ().data ());
-		mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
-		mesh_edit_controller1->mesh = mesh1;
-		mesh_edit_controller2->mesh = mesh2;
+	//	delete mesh1; delete mesh2;
+	//	mesh1 = JC::load_volume_mesh (part1mesh.toAscii ().data ());
+	//	mesh2 = JC::load_volume_mesh (part2mesh.toAscii ().data ());
+	//	mesh_edit_controller1->mesh = mesh1;
+	//	mesh_edit_controller2->mesh = mesh2;
 
-		HC_Open_Segment ("/match models");{
-			HC_Open_Segment_By_Key (mesh1key);{
-				HC_Flush_Geometry ("...");
-				JC::render_volume_mesh_boundary (mesh1);
-			}HC_Close_Segment ();
-			HC_Open_Segment_By_Key (mesh2key);{
-				HC_Flush_Geometry ("...");
-				JC::render_volume_mesh_boundary (mesh2);
-			}HC_Close_Segment ();
-		}HC_Close_Segment ();
+	//	HC_Open_Segment ("/match models");{
+	//		HC_Open_Segment_By_Key (mesh1key);{
+	//			HC_Flush_Geometry ("...");
+	//			JC::render_volume_mesh_boundary (mesh1);
+	//		}HC_Close_Segment ();
+	//		HC_Open_Segment_By_Key (mesh2key);{
+	//			HC_Flush_Geometry ("...");
+	//			JC::render_volume_mesh_boundary (mesh2);
+	//		}HC_Close_Segment ();
+	//	}HC_Close_Segment ();
 
-		hoopsview1->GetHoopsView ()->SetGeometryChanged ();
-		hoopsview1->GetHoopsView ()->Update ();
+	//	hoopsview1->GetHoopsView ()->SetGeometryChanged ();
+	//	hoopsview1->GetHoopsView ()->Update ();
 
-		hoopsview2->GetHoopsView ()->SetGeometryChanged ();
-		hoopsview2->GetHoopsView ()->Update ();
+	//	hoopsview2->GetHoopsView ()->SetGeometryChanged ();
+	//	hoopsview2->GetHoopsView ()->Update ();
 
-		//get_interface_quads ();
+	//	//get_interface_quads ();
 
-		//if (mm_handler) delete mm_handler;
-		//MMData data1, data2;
-		//data1.inter_patch = interface_fhs1;
-		//data2.inter_patch = interface_fhs2;
-		//data1.mesh = mesh1; data2.mesh = mesh2;
-		//mm_handler = new MeshMatchingHandler (&data1, &data2, common_interface);
-		//mm_handler->init_match ();
+	//	//if (mm_handler) delete mm_handler;
+	//	//MMData data1, data2;
+	//	//data1.inter_patch = interface_fhs1;
+	//	//data2.inter_patch = interface_fhs2;
+	//	//data1.mesh = mesh1; data2.mesh = mesh2;
+	//	//mm_handler = new MeshMatchingHandler (&data1, &data2, common_interface);
+	//	//mm_handler->init_match ();
 
-		//matched_chord_pairs = mm_handler->matched_chord_pairs;
+	//	//matched_chord_pairs = mm_handler->matched_chord_pairs;
 
-		//unmatched_chords1 = mm_handler->chord_set1;
-		//unmatched_chords2 = mm_handler->chord_set2;
+	//	//unmatched_chords1 = mm_handler->chord_set1;
+	//	//unmatched_chords2 = mm_handler->chord_set2;
 
-		//draw_matched_chords (matched_chord_pairs);
+	//	//draw_matched_chords (matched_chord_pairs);
 
-		QTime time;
-		time= QTime::currentTime();
-		qsrand(time.msec()+time.second()*1000);
+	//	QTime time;
+	//	time= QTime::currentTime();
+	//	qsrand(time.msec()+time.second()*1000);
 
 
 
-		int xxx=qrand()%3000;
+	//	int xxx=qrand()%3000;
 
-		Sleep (1000 + xxx);
-	}
+	//	Sleep (1000 + xxx);
+	//}
 }
 
 void ManualMeshMatchWidget::on_merge ()
 {
-	HC_Open_Segment ("/match models");{
-		HC_Open_Segment_By_Key (mesh1key);{
-			//HC_Flush_Geometry ("...");
-			JC::render_volume_mesh_boundary (mesh2);
-		}HC_Close_Segment ();
-	}HC_Close_Segment ();
+	//HC_Open_Segment ("/match models");{
+	//	HC_Open_Segment_By_Key (mesh1key);{
+	//		//HC_Flush_Geometry ("...");
+	//		JC::render_volume_mesh_boundary (mesh2);
+	//	}HC_Close_Segment ();
+	//}HC_Close_Segment ();
 
-	hoopsview1->GetHoopsView ()->SetGeometryChanged ();
-	hoopsview1->GetHoopsView ()->Update ();
+	//hoopsview1->GetHoopsView ()->SetGeometryChanged ();
+	//hoopsview1->GetHoopsView ()->Update ();
 
-	hoopsview2->hide ();
+	//hoopsview2->hide ();
 }
 
 void ManualMeshMatchWidget::draw_matched_chords (ChordPairs &matched_chord_pairs)

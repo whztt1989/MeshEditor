@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "FuncDefs.h"
 #include "hoopsview.h"
 #include <intrapi.hxx>
@@ -6,8 +6,8 @@ namespace JC{
 
 	void optimize_quad_patch (VolumeMesh *mesh, std::unordered_set<OvmFaH> &quad_patch, std::unordered_set<OvmFaH> &allowed_fhs)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 		std::unordered_set<OvmEgH> quad_set_boundary_ehs;
 
 		auto fUpdateBoundaryEhsLocally = [&] (const OvmFaH &fh){
@@ -28,7 +28,7 @@ namespace JC{
 		forever{
 			bool optimize_ok = true;
 
-			//Ê×ÏÈ¼ì²é±ß½çÉÏµÄÍø¸ñ±ßÊÇ·ñÓĞÔÚ¼¸ºÎ±ßÉÏµÄ
+			//é¦–å…ˆæ£€æŸ¥è¾¹ç•Œä¸Šçš„ç½‘æ ¼è¾¹æ˜¯å¦æœ‰åœ¨å‡ ä½•è¾¹ä¸Šçš„
 			std::unordered_set<OvmFaH> tested_fhs;
 			foreach (auto &boundary_eh, quad_set_boundary_ehs){
 				std::unordered_set<OvmFaH> adj_boundary_fhs;
@@ -78,8 +78,8 @@ namespace JC{
 		std::unordered_set<OvmFaH> &allowed_boundary_fhs, std::unordered_set<OvmCeH> &barrier_set, std::unordered_set<OvmEgH> &allowed_ehs)
 	{
 		auto hexa_set_bk = hexa_set;
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		std::vector<OvmCeH> fixed_chs, expanded_chs, shrinked_chs;//for debug only
 		std::unordered_set<OvmVeH> hexa_set_bound_vhs, tmp_bound_vhs;
@@ -114,7 +114,7 @@ namespace JC{
 				foreach (auto heh, heh_vec)
 					ehs_on_ch.insert (mesh->edge_handle (heh));
 
-				//Èç¹ûfhÊÇ±ß½çÃæ£¬µ«ÊÇÓÖ²»ÔÚallowed_boundary_fhsÀïÃæ£¬Ôò±íÃ÷¸ÃchÊÇ²»ÔÚÔÊĞí·¶Î§ÄÚµÄ±ß½çÌå
+				//å¦‚æœfhæ˜¯è¾¹ç•Œé¢ï¼Œä½†æ˜¯åˆä¸åœ¨allowed_boundary_fhsé‡Œé¢ï¼Œåˆ™è¡¨æ˜è¯¥chæ˜¯ä¸åœ¨å…è®¸èŒƒå›´å†…çš„è¾¹ç•Œä½“
 				if (mesh->is_boundary (fh)){
 					if(!contains (allowed_boundary_fhs, fh)) return false;
 					else continue;
@@ -157,7 +157,7 @@ namespace JC{
 			return chs.empty ();
 		};
 
-		//¾Ö²¿¸üĞÂ±ß½çÇé¿ö
+		//å±€éƒ¨æ›´æ–°è¾¹ç•Œæƒ…å†µ
 		auto fUpdateBoundaryFhsLocally = [&] (OvmCeH ch){
 			auto hfh_vec = mesh->cell (ch).halffaces ();
 			std::unordered_set<OvmEgH> related_ehs;
@@ -242,14 +242,14 @@ namespace JC{
 				}
 				return result;
 		};
-		//Ê×ÏÈÒªÔ¤´¦ÀíÒ»ÏÂ£¬ÓÉÓÚÓĞĞ©Çé¿öÏÂ£¬ÊäÈëµÄÁùÃæÌåÖĞ¾ÍÓĞ·ÇÁ÷ĞÎµÄÇé¿ö£¬Òò´ËĞèÒª°ÑÊäÈëÏÈ±ä³ÉÁ÷ĞÎ
+		//é¦–å…ˆè¦é¢„å¤„ç†ä¸€ä¸‹ï¼Œç”±äºæœ‰äº›æƒ…å†µä¸‹ï¼Œè¾“å…¥çš„å…­é¢ä½“ä¸­å°±æœ‰éæµå½¢çš„æƒ…å†µï¼Œå› æ­¤éœ€è¦æŠŠè¾“å…¥å…ˆå˜æˆæµå½¢
 		auto fFixManifoldOnce = [&](std::unordered_set<OvmCeH> &hs)->std::vector<OvmCeH>{
 			std::vector<OvmCeH> result;
 			foreach (OvmVeH vh, hexa_set_bound_vhs){
 				std::unordered_set<OvmCeH> adj_chs;
 				get_adj_hexas_around_vertex (mesh, vh, adj_chs);
 
-				//Ñ­»·Ìí¼Órest_chs_of_vhÖĞµÄÁùÃæÌå£¬Ê¹µÃ×îÖÕÎ§ÈÆvhµÄÁùÃæÌå¼¯ºÏÁ¬Í¨
+				//å¾ªç¯æ·»åŠ rest_chs_of_vhä¸­çš„å…­é¢ä½“ï¼Œä½¿å¾—æœ€ç»ˆå›´ç»•vhçš„å…­é¢ä½“é›†åˆè¿é€š
 				result = fFixCore (hs, adj_chs);
 				if (!result.empty ()) return result;
 			}
@@ -258,7 +258,7 @@ namespace JC{
 				std::unordered_set<OvmCeH> adj_chs;
 				get_adj_hexas_around_edge (mesh, eh, adj_chs);
 
-				//Ñ­»·Ìí¼Órest_chs_of_vhÖĞµÄÁùÃæÌå£¬Ê¹µÃ×îÖÕÎ§ÈÆvhµÄÁùÃæÌå¼¯ºÏÁ¬Í¨
+				//å¾ªç¯æ·»åŠ rest_chs_of_vhä¸­çš„å…­é¢ä½“ï¼Œä½¿å¾—æœ€ç»ˆå›´ç»•vhçš„å…­é¢ä½“é›†åˆè¿é€š
 				result = fFixCore (hs, adj_chs);
 				if (!result.empty ()) return result;
 			}
@@ -312,13 +312,13 @@ namespace JC{
 					assert (!contains (hs, out_adj_ch));
 				}
 
-				//Îª·ÀÖ¹µ¥´ÎÅòÕÍÖĞ£¬¶ÔÍ¬Ò»¸öÁùÃæÌå¶à´Î²âÊÔ£¬ÓÃtested_chsÀ´´æ·Å±»²âÊÔ¹ıµÄÁùÃæÌå
+				//ä¸ºé˜²æ­¢å•æ¬¡è†¨èƒ€ä¸­ï¼Œå¯¹åŒä¸€ä¸ªå…­é¢ä½“å¤šæ¬¡æµ‹è¯•ï¼Œç”¨tested_chsæ¥å­˜æ”¾è¢«æµ‹è¯•è¿‡çš„å…­é¢ä½“
 				if (contains (tested_chs, out_adj_ch)) continue;
 				tested_chs.insert (out_adj_ch);
 
 				auto hfh_vec = mesh->cell (out_adj_ch).halffaces ();
-				//out_adj_chÉÏµÄÁù¸öÃæºÍhexa_bound_fhsµÄ½»¼¯Ãæ¸öÊı
-				//Èç¹û¶àÓÚÁ½¸ö£¬Ôò¿ÉÒÔ×ö½øÒ»²½²âÊÔ£¬·ñÔòÖ±½Ó·µ»Ø²»×ö¿¼ÂÇ
+				//out_adj_chä¸Šçš„å…­ä¸ªé¢å’Œhexa_bound_fhsçš„äº¤é›†é¢ä¸ªæ•°
+				//å¦‚æœå¤šäºä¸¤ä¸ªï¼Œåˆ™å¯ä»¥åšè¿›ä¸€æ­¥æµ‹è¯•ï¼Œå¦åˆ™ç›´æ¥è¿”å›ä¸åšè€ƒè™‘
 				int adj_fhs_on_ch_num = 0;
 				bool on_the_boundary = false;
 				foreach (auto &hfh, hfh_vec){
@@ -399,7 +399,7 @@ namespace JC{
 		std::unordered_set<OvmCeH> &barrier_set)
 	{
 		//auto hexa_set_bk = hexa_set;
-		//assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
+		//assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
 
 		//std::vector<OvmCeH> fixed_chs, expanded_chs, shrinked_chs;//for debug only
 		//std::unordered_set<OvmFaH> hexa_set_bound_fhs, tmp_bound_fhs;
@@ -423,7 +423,7 @@ namespace JC{
 		//		foreach (auto heh, heh_vec)
 		//			ehs_on_ch.insert (mesh->edge_handle (heh));
 
-		//		//Èç¹ûfhÊÇ±ß½çÃæ£¬µ«ÊÇÓÖ²»ÔÚallowed_boundary_fhsÀïÃæ£¬Ôò±íÃ÷¸ÃchÊÇ²»ÔÚÔÊĞí·¶Î§ÄÚµÄ±ß½çÌå
+		//		//å¦‚æœfhæ˜¯è¾¹ç•Œé¢ï¼Œä½†æ˜¯åˆä¸åœ¨allowed_boundary_fhsé‡Œé¢ï¼Œåˆ™è¡¨æ˜è¯¥chæ˜¯ä¸åœ¨å…è®¸èŒƒå›´å†…çš„è¾¹ç•Œä½“
 		//		if (mesh->is_boundary (fh)){
 		//			if(!contains (allowed_boundary_fhs, fh)) return false;
 		//			else continue;
@@ -448,7 +448,7 @@ namespace JC{
 		//	return true;
 		//};
 
-		////¾Ö²¿¸üĞÂ±ß½çÇé¿ö
+		////å±€éƒ¨æ›´æ–°è¾¹ç•Œæƒ…å†µ
 		//auto fUpdateBoundaryFhsLocally = [&] (OvmCeH ch){
 		//	auto hfh_vec = mesh->cell (ch).halffaces ();
 		//	foreach (auto &hfh, hfh_vec){
@@ -482,8 +482,8 @@ namespace JC{
 
 	void optimize_shrink_set_test (VolumeMesh *mesh, std::unordered_set<OvmCeH> &hexa_set, std::unordered_set<OvmCeH> &barrier_set)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		std::vector<OvmCeH> fixed_chs, expanded_chs, shrinked_chs;//for debug only
 		std::unordered_set<OvmFaH> hexa_set_bound_fhs, tmp_bound_fhs;
@@ -493,7 +493,7 @@ namespace JC{
 				hexa_set_bound_fhs.insert (fh);
 		}
 
-		//¾Ö²¿¸üĞÂ±ß½çÇé¿ö
+		//å±€éƒ¨æ›´æ–°è¾¹ç•Œæƒ…å†µ
 		auto fUpdateBoundaryFhsLocally = [&] (OvmCeH ch){
 			auto hfh_vec = mesh->cell (ch).halffaces ();
 			std::unordered_set<OvmEgH> related_ehs;
@@ -521,13 +521,13 @@ namespace JC{
 					assert (!contains (hs, out_adj_ch));
 				}
 
-				//Îª·ÀÖ¹µ¥´ÎÅòÕÍÖĞ£¬¶ÔÍ¬Ò»¸öÁùÃæÌå¶à´Î²âÊÔ£¬ÓÃtested_chsÀ´´æ·Å±»²âÊÔ¹ıµÄÁùÃæÌå
+				//ä¸ºé˜²æ­¢å•æ¬¡è†¨èƒ€ä¸­ï¼Œå¯¹åŒä¸€ä¸ªå…­é¢ä½“å¤šæ¬¡æµ‹è¯•ï¼Œç”¨tested_chsæ¥å­˜æ”¾è¢«æµ‹è¯•è¿‡çš„å…­é¢ä½“
 				if (contains (tested_chs, out_adj_ch)) continue;
 				tested_chs.insert (out_adj_ch);
 
 				auto hfh_vec = mesh->cell (out_adj_ch).halffaces ();
-				//out_adj_chÉÏµÄÁù¸öÃæºÍhexa_bound_fhsµÄ½»¼¯Ãæ¸öÊı
-				//Èç¹û¶àÓÚÁ½¸ö£¬Ôò¿ÉÒÔ×ö½øÒ»²½²âÊÔ£¬·ñÔòÖ±½Ó·µ»Ø²»×ö¿¼ÂÇ
+				//out_adj_chä¸Šçš„å…­ä¸ªé¢å’Œhexa_bound_fhsçš„äº¤é›†é¢ä¸ªæ•°
+				//å¦‚æœå¤šäºä¸¤ä¸ªï¼Œåˆ™å¯ä»¥åšè¿›ä¸€æ­¥æµ‹è¯•ï¼Œå¦åˆ™ç›´æ¥è¿”å›ä¸åšè€ƒè™‘
 				int adj_fhs_on_ch_num = 0;
 				bool on_the_boundary = false;
 				foreach (auto &hfh, hfh_vec){
@@ -653,18 +653,18 @@ namespace JC{
 #ifdef MYDEBUG
 		QMessageBox::information (NULL, "pre", "enter");
 #endif
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		std::unordered_set<OvmVeH> fixed_vhs;
 		if (mesh->vertex_property_exists<bool> ("vertexfixedforsmooth")){
 			auto V_FIXED = mesh->request_vertex_property<bool> ("vertexfixedforsmooth");
-			auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+			auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 			for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it){
 				if (V_FIXED[*v_it] == true) fixed_vhs.insert (*v_it);
 			}
 		}
-		//¶Ô±ßµÄÀàĞÍÍ³¼ÆÒ»ÏÂ
+		//å¯¹è¾¹çš„ç±»å‹ç»Ÿè®¡ä¸€ä¸‹
 		std::hash_map<VERTEX*, OvmVeH> vertices_mapping;
 		std::hash_map<EDGE*, std::unordered_set<OvmVeH> > edges_vertices_mapping;
 		std::hash_map<FACE*, std::unordered_set<OvmVeH> > faces_vertices_mapping;
@@ -760,7 +760,7 @@ namespace JC{
 			}
 		}
 		//if (!new_boundary_vhs.empty ())
-		//	QMessageBox::information (NULL, "info", "new_boundary_vhs²»Îª¿Õ");
+		//	QMessageBox::information (NULL, "info", "new_boundary_vhsä¸ä¸ºç©º");
 #ifdef MYDEBUG
 		QMessageBox::information (NULL, "pre", "step2");
 #endif
@@ -829,7 +829,7 @@ namespace JC{
 				while (mesh_vh1 != mesh_vh2){
 					sorted_vhs.push_back (mesh_vh1);
 					OvmVeH next_vh = mesh->InvalidVertexHandle;
-					//Ê×ÏÈÔÚmesh_vhs_setÖĞÕÒÏÂÒ»¸ö¶¥µã
+					//é¦–å…ˆåœ¨mesh_vhs_setä¸­æ‰¾ä¸‹ä¸€ä¸ªé¡¶ç‚¹
 					for (auto v_it = mesh_vhs_set.begin (); v_it != mesh_vhs_set.end (); ++v_it)
 					{
 						OvmHaEgH test_heh = mesh->halfedge (mesh_vh1, *v_it);
@@ -839,7 +839,7 @@ namespace JC{
 							break;
 						}
 					}
-					//Èç¹ûÔÚmesh_vhs_setÖĞÕÒ²»µ½£¬ÄÇÃ´ÔÚnew_vhsÖĞ¼ÌĞøÕÒ
+					//å¦‚æœåœ¨mesh_vhs_setä¸­æ‰¾ä¸åˆ°ï¼Œé‚£ä¹ˆåœ¨new_vhsä¸­ç»§ç»­æ‰¾
 					if (next_vh == mesh->InvalidVertexHandle){
 						double min_dist = std::numeric_limits<double>::max ();
 						OvmVeH best_next_vh = OvmVeH (-1);
@@ -859,7 +859,7 @@ namespace JC{
 						next_vh = best_next_vh;
 						assert (next_vh != mesh->InvalidVertexHandle);
 						new_boundary_vhs.erase (next_vh);
-						V_ENTITY_PTR[next_vh] = (unsigned long) acis_edge;
+						V_ENTITY_PTR[next_vh] = (unsigned int) acis_edge;
 					}
 					mesh_vh1 = next_vh;
 				}//end while (mesh_vh1 != mesh_vh2){...
@@ -871,14 +871,14 @@ namespace JC{
 				std::vector<SPAposition> pts;
 				fDivideOneEdge (acis_edge, sorted_vhs.size () - 1, pts);
 
-				//Èç¹ûºÍ±ßµÄÀëÉ¢Ë³ĞòÏà·´£¬Ôò·­×ªÒ»ÏÂ
+				//å¦‚æœå’Œè¾¹çš„ç¦»æ•£é¡ºåºç›¸åï¼Œåˆ™ç¿»è½¬ä¸€ä¸‹
 				if (!same_point (pts.front (), POS2SPA(mesh->vertex (sorted_vhs.front ())), SPAresabs * 1000))
 					std::reverse (sorted_vhs.begin (), sorted_vhs.end ());
 				for (int j = 0; j != sorted_vhs.size (); ++j)
 					mesh->set_vertex (sorted_vhs[j], SPA2POS(pts[j]));
 				if (sorted_vhs.size () > 2){
 					for (int j = 1; j != sorted_vhs.size () - 1; ++j){
-						V_ENTITY_PTR[sorted_vhs[j]] = (unsigned long)acis_edge;
+						V_ENTITY_PTR[sorted_vhs[j]] = (unsigned int)acis_edge;
 					}
 				}
 
@@ -966,7 +966,7 @@ namespace JC{
 						}
 
 						mesh->set_vertex (Ni, SPA2POS(curr_closest_pos));
-						V_ENTITY_PTR[Ni] = (unsigned long)(curr_closest_f);
+						V_ENTITY_PTR[Ni] = (unsigned int)(curr_closest_f);
 					}
 					//QMessageBox::information (NULL, "face", QString ("round %1 finished").arg (round));
 				}
@@ -1001,14 +1001,14 @@ namespace JC{
 			}
 		};//end auto fSmoothVolumes = [&](int times){...
 
-		//ÏÈ¹âË³±ß
+		//å…ˆå…‰é¡ºè¾¹
 		fSmoothAllEdges ();
 
 #ifdef MYDEBUG
 		QMessageBox::information (NULL, "info", "edge finished");
 #endif
-		//ÔÚ¹âË³±ßµÄÊ±ºò£¬»á½«Ò»Ğ©ĞÂµÄÎ´È·¶¨Î»ÖÃµÄµãµÄÎ»ÖÃÈ·¶¨£¬ËùÒÔÏÈÒª½«Ê£ÏÂµÄµãµÄÎ»ÖÃÈ·¶¨£¬¼´È·¶¨ËüÃÇ¾ßÌåÔÚÄÇ¸öÃæÉÏ
-		//Ê×ÏÈ¸ù¾İboundEdgeÉÏµÄĞÅÏ¢°ÑÌåÍø¸ñ±íÃæÍø¸ñ½øĞĞ·Ö¿é¶ù
+		//åœ¨å…‰é¡ºè¾¹çš„æ—¶å€™ï¼Œä¼šå°†ä¸€äº›æ–°çš„æœªç¡®å®šä½ç½®çš„ç‚¹çš„ä½ç½®ç¡®å®šï¼Œæ‰€ä»¥å…ˆè¦å°†å‰©ä¸‹çš„ç‚¹çš„ä½ç½®ç¡®å®šï¼Œå³ç¡®å®šå®ƒä»¬å…·ä½“åœ¨é‚£ä¸ªé¢ä¸Š
+		//é¦–å…ˆæ ¹æ®boundEdgeä¸Šçš„ä¿¡æ¯æŠŠä½“ç½‘æ ¼è¡¨é¢ç½‘æ ¼è¿›è¡Œåˆ†å—å„¿
 		
 		auto all_boundary_fhs = new std::unordered_set<OvmFaH>();
 		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
@@ -1105,8 +1105,8 @@ namespace JC{
 //#ifdef MYDEBUG
 //		QMessageBox::information (NULL, "pre", "enter");
 //#endif
-//		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-//		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+//		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+//		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 //
 //		std::unordered_set<OvmVeH> fixed_vhs;
 //		if (mesh->vertex_property_exists<bool> ("vertexfixedforsmooth")){
@@ -1139,7 +1139,7 @@ namespace JC{
 //			auto entity_ptr_uint = V_ENTITY_PTR[*v_it];
 //			if (entity_ptr_uint == 0) volume_vhs.insert (*v_it);
 //			else if (entity_ptr_uint == -1){
-//				//ÅĞ¶ÏÒ»ÏÂÕâ¸öĞÂµãÊÇ·ñÔÚÌåÄÚ£¬Èç¹ûÊÇµÄ»°£¬Ôò½«ËûµÄentity_ptrÉèÖÃÎª0
+//				//åˆ¤æ–­ä¸€ä¸‹è¿™ä¸ªæ–°ç‚¹æ˜¯å¦åœ¨ä½“å†…ï¼Œå¦‚æœæ˜¯çš„è¯ï¼Œåˆ™å°†ä»–çš„entity_ptrè®¾ç½®ä¸º0
 //				if (!mesh->is_boundary (*v_it)){
 //					V_ENTITY_PTR[*v_it] = 0;
 //					volume_vhs.insert (*v_it);
@@ -1159,7 +1159,7 @@ namespace JC{
 //			}
 //		}
 //		//if (!new_boundary_vhs.empty ())
-//		//	QMessageBox::information (NULL, "info", "new_boundary_vhs²»Îª¿Õ");
+//		//	QMessageBox::information (NULL, "info", "new_boundary_vhsä¸ä¸ºç©º");
 //#ifdef MYDEBUG
 //		QMessageBox::information (NULL, "pre", "step2");
 //#endif
@@ -1227,7 +1227,7 @@ namespace JC{
 //				while (mesh_vh1 != mesh_vh2){
 //					sorted_vhs.push_back (mesh_vh1);
 //					OvmVeH next_vh = mesh->InvalidVertexHandle;
-//					//Ê×ÏÈÔÚmesh_vhs_setÖĞÕÒÏÂÒ»¸ö¶¥µã
+//					//é¦–å…ˆåœ¨mesh_vhs_setä¸­æ‰¾ä¸‹ä¸€ä¸ªé¡¶ç‚¹
 //					for (auto v_it = mesh_vhs_set.begin (); v_it != mesh_vhs_set.end (); ++v_it)
 //					{
 //						OvmHaEgH test_heh = mesh->halfedge (mesh_vh1, *v_it);
@@ -1237,7 +1237,7 @@ namespace JC{
 //							break;
 //						}
 //					}
-//					//Èç¹ûÔÚmesh_vhs_setÖĞÕÒ²»µ½£¬ÄÇÃ´ÔÚnew_vhsÖĞ¼ÌĞøÕÒ
+//					//å¦‚æœåœ¨mesh_vhs_setä¸­æ‰¾ä¸åˆ°ï¼Œé‚£ä¹ˆåœ¨new_vhsä¸­ç»§ç»­æ‰¾
 //					if (next_vh == mesh->InvalidVertexHandle){
 //						double min_dist = std::numeric_limits<double>::max ();
 //						OvmVeH best_next_vh = OvmVeH (-1);
@@ -1257,7 +1257,7 @@ namespace JC{
 //						next_vh = best_next_vh;
 //						assert (next_vh != mesh->InvalidVertexHandle);
 //						new_boundary_vhs.erase (next_vh);
-//						V_ENTITY_PTR[next_vh] = (unsigned long) acis_edge;
+//						V_ENTITY_PTR[next_vh] = (unsigned int) acis_edge;
 //					}
 //					mesh_vh1 = next_vh;
 //				}//end while (mesh_vh1 != mesh_vh2){...
@@ -1269,14 +1269,14 @@ namespace JC{
 //				std::vector<SPAposition> pts;
 //				fDivideOneEdge (acis_edge, sorted_vhs.size () - 1, pts);
 //
-//				//Èç¹ûºÍ±ßµÄÀëÉ¢Ë³ĞòÏà·´£¬Ôò·­×ªÒ»ÏÂ
+//				//å¦‚æœå’Œè¾¹çš„ç¦»æ•£é¡ºåºç›¸åï¼Œåˆ™ç¿»è½¬ä¸€ä¸‹
 //				if (!same_point (pts.front (), POS2SPA(mesh->vertex (sorted_vhs.front ())), SPAresabs * 1000))
 //					std::reverse (sorted_vhs.begin (), sorted_vhs.end ());
 //				for (int j = 0; j != sorted_vhs.size (); ++j)
 //					mesh->set_vertex (sorted_vhs[j], SPA2POS(pts[j]));
 //				if (sorted_vhs.size () > 2){
 //					for (int j = 1; j != sorted_vhs.size () - 1; ++j){
-//						V_ENTITY_PTR[sorted_vhs[j]] = (unsigned long)acis_edge;
+//						V_ENTITY_PTR[sorted_vhs[j]] = (unsigned int)acis_edge;
 //					}
 //				}
 //
@@ -1364,7 +1364,7 @@ namespace JC{
 //						}
 //
 //						mesh->set_vertex (Ni, SPA2POS(curr_closest_pos));
-//						V_ENTITY_PTR[Ni] = (unsigned long)(curr_closest_f);
+//						V_ENTITY_PTR[Ni] = (unsigned int)(curr_closest_f);
 //					}
 //					//QMessageBox::information (NULL, "face", QString ("round %1 finished").arg (round));
 //				}
@@ -1399,14 +1399,14 @@ namespace JC{
 //			}
 //		};//end auto fSmoothVolumes = [&](int times){...
 //
-//		//ÏÈ¹âË³±ß
+//		//å…ˆå…‰é¡ºè¾¹
 //		fSmoothAllEdges ();
 //
 //#ifdef MYDEBUG
 //		QMessageBox::information (NULL, "info", "edge finished");
 //#endif
-//		//ÔÚ¹âË³±ßµÄÊ±ºò£¬»á½«Ò»Ğ©ĞÂµÄÎ´È·¶¨Î»ÖÃµÄµãµÄÎ»ÖÃÈ·¶¨£¬ËùÒÔÏÈÒª½«Ê£ÏÂµÄµãµÄÎ»ÖÃÈ·¶¨£¬¼´È·¶¨ËüÃÇ¾ßÌåÔÚÄÇ¸öÃæÉÏ
-//		//Ê×ÏÈ¸ù¾İboundEdgeÉÏµÄĞÅÏ¢°ÑÌåÍø¸ñ±íÃæÍø¸ñ½øĞĞ·Ö¿é¶ù
+//		//åœ¨å…‰é¡ºè¾¹çš„æ—¶å€™ï¼Œä¼šå°†ä¸€äº›æ–°çš„æœªç¡®å®šä½ç½®çš„ç‚¹çš„ä½ç½®ç¡®å®šï¼Œæ‰€ä»¥å…ˆè¦å°†å‰©ä¸‹çš„ç‚¹çš„ä½ç½®ç¡®å®šï¼Œå³ç¡®å®šå®ƒä»¬å…·ä½“åœ¨é‚£ä¸ªé¢ä¸Š
+//		//é¦–å…ˆæ ¹æ®boundEdgeä¸Šçš„ä¿¡æ¯æŠŠä½“ç½‘æ ¼è¡¨é¢ç½‘æ ¼è¿›è¡Œåˆ†å—å„¿
 //
 //		auto all_boundary_fhs = new std::unordered_set<OvmFaH>();
 //		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
@@ -1502,7 +1502,7 @@ namespace JC{
 
 	void smooth_acis_faces (VolumeMesh *mesh, std::vector<FACE*> &acis_faces, int smooth_rounds, HoopsView *hoopsview)
 	{
-		//»ñµÃacis_facesÉÏµÄ±ßºÍµã
+		//è·å¾—acis_facesä¸Šçš„è¾¹å’Œç‚¹
 		std::unordered_set<VERTEX*> geom_vts_on_faces;
 		std::unordered_set<EDGE*> geom_egs_on_faces, shared_egs_on_faces;
 		foreach (auto f, acis_faces){
@@ -1523,8 +1523,8 @@ namespace JC{
 			geom_vts_on_faces.insert (acis_v2);
 		}
 
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 		auto V_FIXED = mesh->request_vertex_property<bool> ("vertexfixedforsmooth");
 
 
@@ -1540,14 +1540,14 @@ namespace JC{
 		auto edges_vertices_mapping = new std::hash_map<EDGE*, std::unordered_set<OvmVeH> >();
 		auto faces_vertices_mapping = new std::hash_map<FACE*, std::unordered_set<OvmVeH> > ();
 
-		//ÕÒ³öÄÄĞ©±ßÊÇÀàËÆÔ²Öù²àÃæÉÏµÄÄ¸ÏßÄÇÖÖ¿ÉÒÔºöÂÔµÄ±ß
+		//æ‰¾å‡ºå“ªäº›è¾¹æ˜¯ç±»ä¼¼åœ†æŸ±ä¾§é¢ä¸Šçš„æ¯çº¿é‚£ç§å¯ä»¥å¿½ç•¥çš„è¾¹
 		std::set<EDGE*> cylinder_edges;
 		//foreach (auto acis_edge, shared_egs_on_faces){
 		//	ENTITY_LIST adj_faces;
 		//	api_get_faces (acis_edge, adj_faces);
 		//	bool is_cyl_f = true;
-		//	//ÕâÖÖ±ßµÄÌØµãÊÇºÍËüÏàÁÚµÄÁ½¸öÃæ¶¼ÊÇÔ²ÖùÃæ£¬¶øËü±¾ÉíÓÖÊÇÖ±Ïß
-		//	//×¢Òâ£ºÕâÖÖÅĞ±ğ·½Ê½²¢²»ÑÏ½÷£¬µ«ÊÇ´ó²¿·ÖÇé¿ö¿ÉÒÔÕâÃ´ÅĞ¶Ï
+		//	//è¿™ç§è¾¹çš„ç‰¹ç‚¹æ˜¯å’Œå®ƒç›¸é‚»çš„ä¸¤ä¸ªé¢éƒ½æ˜¯åœ†æŸ±é¢ï¼Œè€Œå®ƒæœ¬èº«åˆæ˜¯ç›´çº¿
+		//	//æ³¨æ„ï¼šè¿™ç§åˆ¤åˆ«æ–¹å¼å¹¶ä¸ä¸¥è°¨ï¼Œä½†æ˜¯å¤§éƒ¨åˆ†æƒ…å†µå¯ä»¥è¿™ä¹ˆåˆ¤æ–­
 		//	for (int j = 0; j != adj_faces.count (); ++j){
 		//		if (!is_cylindrical_face (adj_faces[j])){
 		//			is_cyl_f = false; break;
@@ -1576,7 +1576,7 @@ namespace JC{
 		//	}
 		//}
 
-		//¶ÔÓÚall_faceÖĞ²»ºÍÆäËûÃæºÏ²¢µÄÃæ£¬ÈÃËûÃÇÒ²µ¥¶À³ÉÎªÒ»¸ögroup£¬±ãÓÚºóÃæÍ³Ò»´¦Àí
+		//å¯¹äºall_faceä¸­ä¸å’Œå…¶ä»–é¢åˆå¹¶çš„é¢ï¼Œè®©ä»–ä»¬ä¹Ÿå•ç‹¬æˆä¸ºä¸€ä¸ªgroupï¼Œä¾¿äºåé¢ç»Ÿä¸€å¤„ç†
 		foreach (auto &f, all_faces){
 			std::set<FACE*> one_group;
 			one_group.insert (f);
@@ -1601,12 +1601,12 @@ namespace JC{
 				if (entity == NULL) new_boundary_vhs->insert (*v_it);
 				else if (is_VERTEX (entity)){
 					auto vt = (VERTEX*)entity;
-					//Ö»ËÑ¼¯µ±Ç°ĞèÒª´¦ÀíµÄ¼¸ºÎµã
+					//åªæœé›†å½“å‰éœ€è¦å¤„ç†çš„å‡ ä½•ç‚¹
 					if (contains (geom_vts_on_faces, vt))
 						vertices_mapping->insert (std::make_pair(vt, *v_it));
 				}else if (is_EDGE (entity)){
 					auto eg = (EDGE*)entity;
-					//Ö»´¦Àíµ±Ç°ĞèÒª´¦ÀíµÄ¼¸ºÎ±ß
+					//åªå¤„ç†å½“å‰éœ€è¦å¤„ç†çš„å‡ ä½•è¾¹
 					if (!contains (geom_egs_on_faces, eg)) continue;
 					if (contains (cylinder_edges, eg)){
 						int idx = edge_face_group_mapping[eg];
@@ -1621,7 +1621,7 @@ namespace JC{
 							if (contains (one_group, f)) return true;
 							else return false;
 					});
-					//Ö»´¦Àíµ±Ç°ĞèÒª´¦ÀíµÄ¼¸ºÎÃæ
+					//åªå¤„ç†å½“å‰éœ€è¦å¤„ç†çš„å‡ ä½•é¢
 					if (locate != cylindrical_face_groups.end ())
 						(*determined_vhs_on_face_groups)[locate - cylindrical_face_groups.begin ()].insert (*v_it);
 				}
@@ -1683,7 +1683,7 @@ namespace JC{
 			while (mesh_vh1 != mesh_vh2){
 				sorted_vhs.push_back (mesh_vh1);
 				OvmVeH next_vh = mesh->InvalidVertexHandle;
-				//Ê×ÏÈÔÚmesh_vhs_setÖĞÕÒÏÂÒ»¸ö¶¥µã
+				//é¦–å…ˆåœ¨mesh_vhs_setä¸­æ‰¾ä¸‹ä¸€ä¸ªé¡¶ç‚¹
 				for (auto v_it = mesh_vhs_set.begin (); v_it != mesh_vhs_set.end (); ++v_it)
 				{
 					OvmHaEgH test_heh = mesh->halfedge (mesh_vh1, *v_it);
@@ -1693,7 +1693,7 @@ namespace JC{
 						break;
 					}
 				}
-				//Èç¹ûÔÚmesh_vhs_setÖĞÕÒ²»µ½£¬ÄÇÃ´ÔÚnew_vhsÖĞ¼ÌĞøÕÒ
+				//å¦‚æœåœ¨mesh_vhs_setä¸­æ‰¾ä¸åˆ°ï¼Œé‚£ä¹ˆåœ¨new_vhsä¸­ç»§ç»­æ‰¾
 				if (next_vh == mesh->InvalidVertexHandle){
 					double min_dist = std::numeric_limits<double>::max ();
 					OvmVeH best_next_vh = OvmVeH (-1);
@@ -1713,7 +1713,7 @@ namespace JC{
 					next_vh = best_next_vh;
 					assert (next_vh != mesh->InvalidVertexHandle);
 					new_boundary_vhs->erase (next_vh);
-					V_ENTITY_PTR[next_vh] = (unsigned long) acis_edge;
+					V_ENTITY_PTR[next_vh] = (unsigned int) acis_edge;
 				}
 				mesh_vh1 = next_vh;
 			}//end while (mesh_vh1 != mesh_vh2){...
@@ -1722,14 +1722,14 @@ namespace JC{
 			std::vector<SPAposition> pts;
 			fDivideOneEdge (acis_edge, sorted_vhs.size () - 1, pts);
 
-			//Èç¹ûºÍ±ßµÄÀëÉ¢Ë³ĞòÏà·´£¬Ôò·­×ªÒ»ÏÂ
+			//å¦‚æœå’Œè¾¹çš„ç¦»æ•£é¡ºåºç›¸åï¼Œåˆ™ç¿»è½¬ä¸€ä¸‹
 			if (!same_point (pts.front (), POS2SPA(mesh->vertex (sorted_vhs.front ())), SPAresabs * 1000))
 				std::reverse (sorted_vhs.begin (), sorted_vhs.end ());
 			for (int j = 0; j != sorted_vhs.size (); ++j)
 				mesh->set_vertex (sorted_vhs[j], SPA2POS(pts[j]));
 			if (sorted_vhs.size () > 2){
 				for (int j = 1; j != sorted_vhs.size () - 1; ++j){
-					V_ENTITY_PTR[sorted_vhs[j]] = (unsigned long)acis_edge;
+					V_ENTITY_PTR[sorted_vhs[j]] = (unsigned int)acis_edge;
 				}
 			}
 
@@ -1745,8 +1745,8 @@ namespace JC{
 		//////////////////////////////////////////////////////////////////////////
 		//smooth face
 		//////////////////////////////////////////////////////////////////////////
-		//Ê×ÏÈ¸ù¾İÇ°Ãæ¶Ô±ßµÄ¹âË³£¬¿ÉÒÔ½«Íø¸ñ±íÃæµÄËÄ±ßĞÎÃæ·Ö³ÉÈô¸É¸ö¼¯ºÏ£¬
-		//È»ºó¶ÔÃ¿¸ö¼¯ºÏ½øĞĞ¹âË³
+		//é¦–å…ˆæ ¹æ®å‰é¢å¯¹è¾¹çš„å…‰é¡ºï¼Œå¯ä»¥å°†ç½‘æ ¼è¡¨é¢çš„å››è¾¹å½¢é¢åˆ†æˆè‹¥å¹²ä¸ªé›†åˆï¼Œ
+		//ç„¶åå¯¹æ¯ä¸ªé›†åˆè¿›è¡Œå…‰é¡º
 		auto all_boundary_fhs = new std::unordered_set<OvmFaH>();
 		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
 			all_boundary_fhs->insert (*bf_it);
@@ -1859,7 +1859,7 @@ namespace JC{
 					}
 
 					mesh->set_vertex (Ni, SPA2POS(curr_closest_pos));
-					V_ENTITY_PTR[Ni] = (unsigned long)(curr_closest_f);
+					V_ENTITY_PTR[Ni] = (unsigned int)(curr_closest_f);
 				}
 				//QMessageBox::information (NULL, "face", QString ("round %1 finished").arg (round));
 			}

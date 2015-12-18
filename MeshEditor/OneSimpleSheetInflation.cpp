@@ -96,12 +96,12 @@ void OneSimpleSheetInflationHandler::reprocess ()
 bool OneSimpleSheetInflationHandler::analyze_input_edges (std::unordered_set<OvmEgH> &_input_ehs)
 {
 	input_ehs = _input_ehs;
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")){
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")){
 		last_err_str = QObject::tr ("网格节点没有关联集合实体！");
 		return false;
 	}
 
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	//对输入边上的点相连接的边进行统计
 	vh_adj_ehs_mapping.clear ();
@@ -478,7 +478,7 @@ std::vector<OvmEgH> OneSimpleSheetInflationHandler::get_intersect_path (std::vec
 	//首先获得可以查找第二个交叉点的顶点范围
 	assert (mesh->vertex_property_exists<int> ("node level"));
 	auto V_NODE_LEVEL = mesh->request_vertex_property<int> ("node level");
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	intersect_allowed_vhs.clear ();
 	foreach (auto &end_vh_pair, end_vh_pairs){

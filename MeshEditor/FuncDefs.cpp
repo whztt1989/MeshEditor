@@ -127,6 +127,11 @@ namespace JC{
 		check_outcome(result);
 	}
 
+	void save_acis_entity (ENTITY *entity, QString file_name)
+	{
+		save_acis_entity (entity, file_name.toAscii ().data ());
+	}
+
 	bool parse_xml_file (QString xml_path, QString &file_type, QString &data_name, std::vector<std::pair<QString, QString> > &path_pairs)
 	{
 		QDomDocument doc("mydocument");
@@ -1004,6 +1009,24 @@ namespace JC{
 		return com_fh;
 	}
 
+	OvmFaH get_common_face_handle (VolumeMesh *mesh, OvmEgH eh1, OvmEgH eh2)
+	{
+		OvmFaH com_fh = mesh->InvalidFaceHandle;
+		auto heh1 = mesh->halfedge_handle (eh1, 0),
+			heh2 = mesh->halfedge_handle (eh2, 0);
+		for (auto hf_it1 = mesh->hehf_iter (heh1); hf_it1; ++hf_it1){
+			auto fh1 = mesh->face_handle (*hf_it1);
+			for (auto hf_it2 = mesh->hehf_iter (heh2); hf_it2; ++hf_it2){
+				auto fh2 = mesh->face_handle (*hf_it2);
+				if (fh1 == fh2){
+					com_fh = fh1;
+					break;
+				}
+			}
+		}
+		return com_fh;
+	}
+
 	OvmVeH get_common_vertex_handle (VolumeMesh *mesh, OvmEgH eh1, OvmEgH eh2)
 	{
 		OvmVeH v11 = mesh->edge (eh1).from_vertex (), v12 = mesh->edge (eh1).to_vertex ();
@@ -1188,7 +1211,7 @@ namespace JC{
 				all_entities.insert (vertices_list[i]);
 		}
 
-		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
 			auto adj_vhs = JC::get_adj_vertices_around_face (mesh, *bf_it);
 			bool is_on_inter = true;
@@ -1222,7 +1245,7 @@ namespace JC{
 				all_entities.insert (vertices_list[i]);
 		}
 
-		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 		for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
 			auto adj_vhs = JC::get_adj_vertices_around_face (mesh, *bf_it);
 			bool is_on_inter = true;
@@ -1241,8 +1264,8 @@ namespace JC{
 
 	void get_fhs_on_acis_face (VolumeMesh *mesh, FACE *acis_face, std::unordered_set<OvmFaH> &fhs)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		fhs.clear ();
 
@@ -1254,11 +1277,11 @@ namespace JC{
 
 	FACE* get_associated_geometry_face_of_boundary_fh (VolumeMesh *mesh, OvmFaH fh)
 	{
-		if (!mesh->vertex_property_exists<unsigned long> ("entityptr"))
+		if (!mesh->vertex_property_exists<unsigned int> ("entityptr"))
 			return NULL;
 		if (!mesh->is_boundary (fh))
 			return NULL;
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 		auto adj_vhs = get_adj_vertices_around_face (mesh, fh);
 		std::vector<std::set<FACE*> > all_adj_faces;
 		foreach (auto vh, adj_vhs){
@@ -1289,7 +1312,7 @@ namespace JC{
 	}
 
 
-	EDGE* get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh, OpenVolumeMesh::VertexPropertyT<unsigned long> &V_ENTITY_PTR)
+	EDGE* get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh, OpenVolumeMesh::VertexPropertyT<unsigned int> &V_ENTITY_PTR)
 	{
 		auto vh1 = mesh->edge (eh).from_vertex (),
 			vh2 = mesh->edge (eh).to_vertex ();
@@ -1332,8 +1355,8 @@ namespace JC{
 
 	EDGE* get_associated_geometry_edge_of_boundary_eh (VolumeMesh *mesh, OvmEgH eh)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		auto vh1 = mesh->edge (eh).from_vertex (),
 			vh2 = mesh->edge (eh).to_vertex ();
@@ -1593,7 +1616,7 @@ namespace JC{
 			return NULL;
 		};
 
-		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr", 0);
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr", 0);
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 		{
 			if (!mesh->is_boundary (*v_it))
@@ -1602,15 +1625,15 @@ namespace JC{
 			SPAposition spa_pos = POS2SPA(mesh->vertex (*v_it));
 			ENTITY* on_this_vertex = fOnWhichEntity (vertices_list, spa_pos);
 			if (on_this_vertex)
-				V_ENT_PTR[*v_it] = (unsigned long)on_this_vertex;
+				V_ENT_PTR[*v_it] = (unsigned int)on_this_vertex;
 			else{
 				ENTITY* on_this_edge = fOnWhichEntity (edges_list, spa_pos);
 				if (on_this_edge)
-					V_ENT_PTR[*v_it] = (unsigned long)on_this_edge;
+					V_ENT_PTR[*v_it] = (unsigned int)on_this_edge;
 				else{
 					ENTITY* on_this_face = fOnWhichEntity (faces_list, spa_pos);
 					if (on_this_face)
-						V_ENT_PTR[*v_it] = (unsigned long)on_this_face;
+						V_ENT_PTR[*v_it] = (unsigned int)on_this_face;
 					else{
 						/*QMessageBox::critical (NULL, QObject::tr("错误!"), QObject::tr("这个点找不到对应的ACIS Entity!"));
 						assert (false);*/

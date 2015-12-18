@@ -33,6 +33,7 @@ DualChord::DualChord (VolumeMesh *m)
 	type = "chord";
 	name = QString ("chord No.%1").arg (chord_idx++);
 	idx = chord_idx;
+	is_closed = is_self_int = false;
 }
 
 ChordPolyline get_chord_polyline (DualChord *chord)

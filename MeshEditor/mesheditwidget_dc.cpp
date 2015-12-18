@@ -9,7 +9,7 @@ void MeshEditWidget::on_set_start_face_for_dc ()
 		return;
 	}
 	FACE *interface_face = NULL;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	foreach (auto &fh, selected_fhs){
 		auto adj_vhs = JC::get_adj_vertices_around_face (mesh, fh);

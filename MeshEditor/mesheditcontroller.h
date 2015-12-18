@@ -89,6 +89,10 @@ private slots:
 	void on_show_chord_info_for_co ();
 	void on_clear_selection_for_co ();
 	void on_select_chord_by_idx_for_co ();
+	void on_select_edge_for_adjust_chord ();
+	void on_select_as_1st_edge_for_chord ();
+	void on_select_as_2nd_edge_for_chord ();
+	void on_finish_adjusting_chord ();
 
 	void on_open_for_pd ();
 	void on_show_interface_patches_for_pd ();
@@ -161,6 +165,7 @@ private:
 	std::unordered_set<OvmCeH> chs_on_sheet_to_extract;
 
 	DualChord *selected_chord;
+	OvmEgH first_eh_for_adjusting_chord, second_eh_for_adjusting_chord;
 	std::hash_map<OvmVeH, OvmVeH> old_new_vhs_mapping;
 	VolumeMeshElementGroup *tmp_group_for_pd1, *tmp_group_for_pd2;
 	std::unordered_set<OvmFaH> fhs_for_rendering;

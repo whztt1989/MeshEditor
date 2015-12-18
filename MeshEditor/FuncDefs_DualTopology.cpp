@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "FuncDefs.h"
 #include <OpenVolumeMesh/Attribs/StatusAttrib.hh>
 
@@ -50,16 +50,16 @@ namespace JC{
 	std::vector<DualSheet *> one_simple_sheet_inflation (VolumeMesh *mesh, std::unordered_set<OvmFaH> &inflation_quad_set, 
 		std::unordered_set<OvmCeH> &shrink_set, std::unordered_set<OvmEgH> &int_ehs, std::hash_map<OvmVeH, OvmVeH> &old_new_vhs_mapping)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 		auto V_PREV_HANDLE = mesh->request_vertex_property<OvmVeH> ("prevhandle", mesh->InvalidVertexHandle);
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 			V_PREV_HANDLE[*v_it] = *v_it;
 
-		auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
-		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
+		auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
 
-		//»ñµÃfhsÉÏµÄËùÓĞ¶¥µã
+		//è·å¾—fhsä¸Šçš„æ‰€æœ‰é¡¶ç‚¹
 		std::unordered_set<OvmVeH> all_vhs_on_fhs;
 		foreach (auto &fh, inflation_quad_set){
 			auto hehs = mesh->face (fh).halfedges ();
@@ -67,11 +67,11 @@ namespace JC{
 				all_vhs_on_fhs.insert (mesh->halfedge (heh).to_vertex ());
 		}
 
-		//´æ·Å¾ÉµÄµãºÍĞÂµÄµãÖ®¼äµÄÓ³Éä¹ØÏµ
-		//ÓÉÓÚÒ»°ãÇé¿ö£¬¾ÉµÄµãÒ»·ÖÎª¶ş£¬¶øÔÚ½»²æ´¦¾ÉµÄµãÒ»·ÖÎªËÄ£¬ËùÒÔ¾ÉµãºÈĞÂµãÖĞ¼ä´æÔÚ×ÅÒ»¶Ô¶àµÄ¶ÔÓ¦¹ØÏµ£¬
-		//ÎªÁËÇø±ğ¾Éµãµ½µ×¶ÔÓ¦ÓÚÄÄ¸öĞÂµã£¬ĞèÒªÒ»¸öÁùÃæÌå¼¯ºÏÀ´×öÅĞ¶Ï£¬¸ÃÁùÃæÌå¼¯ºÏ¾ÍÊÇ¾Éµã±ßÉÏµÄÒ»¸öshrink_set
+		//å­˜æ”¾æ—§çš„ç‚¹å’Œæ–°çš„ç‚¹ä¹‹é—´çš„æ˜ å°„å…³ç³»
+		//ç”±äºä¸€èˆ¬æƒ…å†µï¼Œæ—§çš„ç‚¹ä¸€åˆ†ä¸ºäºŒï¼Œè€Œåœ¨äº¤å‰å¤„æ—§çš„ç‚¹ä¸€åˆ†ä¸ºå››ï¼Œæ‰€ä»¥æ—§ç‚¹å–æ–°ç‚¹ä¸­é—´å­˜åœ¨ç€ä¸€å¯¹å¤šçš„å¯¹åº”å…³ç³»ï¼Œ
+		//ä¸ºäº†åŒºåˆ«æ—§ç‚¹åˆ°åº•å¯¹åº”äºå“ªä¸ªæ–°ç‚¹ï¼Œéœ€è¦ä¸€ä¸ªå…­é¢ä½“é›†åˆæ¥åšåˆ¤æ–­ï¼Œè¯¥å…­é¢ä½“é›†åˆå°±æ˜¯æ—§ç‚¹è¾¹ä¸Šçš„ä¸€ä¸ªshrink_set
 		auto newly_created_vertices_cells_mapping = new std::map<OvmVeH, std::map<OvmVeH, std::unordered_set<OvmCeH> > > ();
-		//new_original_vhs_mapping´æ´¢ĞÂÉú³ÉµÄµãºÍÔ­Ê¼µãÖ®¼äµÄ¶ÔÓ¦¹ØÏµ£¬ÊÇÒ»ÖÖ¶à¶ÔÒ»µÄ¹ØÏµ
+		//new_original_vhs_mappingå­˜å‚¨æ–°ç”Ÿæˆçš„ç‚¹å’ŒåŸå§‹ç‚¹ä¹‹é—´çš„å¯¹åº”å…³ç³»ï¼Œæ˜¯ä¸€ç§å¤šå¯¹ä¸€çš„å…³ç³»
 		std::hash_map<OvmVeH, OvmVeH> new_original_vhs_mapping;
 		//lambda function to get the corresponding new vertex according to the original vertex and the cell
 		auto fGetNewVeHOnCeH = [&] (OvmVeH vh, OvmCeH ch)->OvmVeH{
@@ -96,7 +96,7 @@ namespace JC{
 			std::vector<std::unordered_set<OvmCeH> > cell_groups;
 			std::map<OvmVeH, std::unordered_set<OvmCeH> > newly_vertices_distribution;
 			get_cell_groups_around_vertex (mesh, vh, inflation_quad_set, cell_groups);
-			//Èç¹ûfhs²¿·ÖÇøÓòÌù×ÅÍø¸ñ±íÃæÊ±£¬cell_groupsÖ»°üº¬Ò»¸ö¼¯ºÏ£¬Ôò´ËÊ±ĞèÒªÔÙ²¹ÉÏÒ»¸ö¿Õ¼¯ºÏ
+			//å¦‚æœfhséƒ¨åˆ†åŒºåŸŸè´´ç€ç½‘æ ¼è¡¨é¢æ—¶ï¼Œcell_groupsåªåŒ…å«ä¸€ä¸ªé›†åˆï¼Œåˆ™æ­¤æ—¶éœ€è¦å†è¡¥ä¸Šä¸€ä¸ªç©ºé›†åˆ
 			if (cell_groups.size () == 1){
 				std::unordered_set<OvmCeH> tmp;
 				tmp.insert (mesh->InvalidCellHandle);
@@ -131,8 +131,8 @@ namespace JC{
 				}
 			}
 			foreach (auto &one_chs_group, cell_groups){				
-				//ÏÂÃæÒªÅĞ¶ÏÏÂone_chs_groupÊÇ·ñÔÚshrink_setÖĞ¡£Èç¹ûÔÚµÄ»°£¬ÄÇÃ´Õâ¸öĞÂµÄµãÊÇĞÂ²úÉúµÄ£¬ËùÒÔËûµÄentity_ptrÎª¿Õ
-				//Èç¹û²»ÔÚshrink_setÖĞ£¬ÄÇÃ´Õâ¸öµã¾ÍÊÇÔ­À´µÄ¾Éµã£¨ÒòÎªÍØÆËĞŞ¸ÄµÄĞèÒª²ÅÖØĞÂ½¨ÁËËü£©
+				//ä¸‹é¢è¦åˆ¤æ–­ä¸‹one_chs_groupæ˜¯å¦åœ¨shrink_setä¸­ã€‚å¦‚æœåœ¨çš„è¯ï¼Œé‚£ä¹ˆè¿™ä¸ªæ–°çš„ç‚¹æ˜¯æ–°äº§ç”Ÿçš„ï¼Œæ‰€ä»¥ä»–çš„entity_pträ¸ºç©º
+				//å¦‚æœä¸åœ¨shrink_setä¸­ï¼Œé‚£ä¹ˆè¿™ä¸ªç‚¹å°±æ˜¯åŸæ¥çš„æ—§ç‚¹ï¼ˆå› ä¸ºæ‹“æ‰‘ä¿®æ”¹çš„éœ€è¦æ‰é‡æ–°å»ºäº†å®ƒï¼‰
 				OvmVeH new_vertex = OvmVeH (-1);
 				OvmVec3d reasonable_pos (0, 0, 0);
 				reasonable_pos = mesh->vertex (vh);
@@ -159,8 +159,8 @@ namespace JC{
 		}//end foreach (auto &vh, all_vhs) {...
 
 
-		//ÓÉÓÚºóÃæ½øĞĞgarbage_collectionµÄÊ±ºò»áÉ¾³ıµôÒ»Ğ©µã£¬È»ºóOVMÄÚ²¿»áÖØĞÂ¼ÆËã¶¥µãµÄ¾ä±úÊıÖµ
-		//ËùÒÔĞèÒªÔ¤ÏÈ±£´æÒ»ÏÂ¾ÉµÄ¶¥µã¶ÔÓ¦µÄ¼¸ºÎÎ»ÖÃÒÔ¼°ENTITY_PTRµÄÖµ
+		//ç”±äºåé¢è¿›è¡Œgarbage_collectionçš„æ—¶å€™ä¼šåˆ é™¤æ‰ä¸€äº›ç‚¹ï¼Œç„¶åOVMå†…éƒ¨ä¼šé‡æ–°è®¡ç®—é¡¶ç‚¹çš„å¥æŸ„æ•°å€¼
+		//æ‰€ä»¥éœ€è¦é¢„å…ˆä¿å­˜ä¸€ä¸‹æ—§çš„é¡¶ç‚¹å¯¹åº”çš„å‡ ä½•ä½ç½®ä»¥åŠENTITY_PTRçš„å€¼
 		struct PointInfo{
 			PointInfo (){
 				pos = OvmVec3d (0, 0, 0);
@@ -192,11 +192,11 @@ namespace JC{
 		auto old_mesh_sheet_ptr = new std::map<std::set<OvmVeH>, unsigned long> ();
 		auto old_mesh_chord_ptr = new std::map<std::set<OvmVeH>, unsigned long> ();
 
-		//ËÑ¼¯ÄÇĞ©ĞèÒªÖØ½¨µÄÁùÃæÌåµÄ°Ë¸ö¶¥µã
+		//æœé›†é‚£äº›éœ€è¦é‡å»ºçš„å…­é¢ä½“çš„å…«ä¸ªé¡¶ç‚¹
 		std::hash_map<OvmCeH, std::vector<OvmVeH> > cells_rebuilding_recipes;
 		foreach (auto &ch, all_adj_cells) {
 			std::vector<OvmVeH> ch_vhs;
-			std::hash_map<OvmVeH, OvmVeH> curr_old_new_vhs_mapping;//´æ´¢µ±Ç°ÁùÃæÌåÖĞĞÂ¾ÉµãµÄÓ³Éä¹ØÏµ
+			std::hash_map<OvmVeH, OvmVeH> curr_old_new_vhs_mapping;//å­˜å‚¨å½“å‰å…­é¢ä½“ä¸­æ–°æ—§ç‚¹çš„æ˜ å°„å…³ç³»
 			for (auto hv_it = mesh->hv_iter (ch); hv_it; ++hv_it) {
 				auto newly_vh = fGetNewVeHOnCeH (*hv_it, ch);
 				if (newly_vh == mesh->InvalidVertexHandle){
@@ -221,7 +221,7 @@ namespace JC{
 			}
 		}//end foreach (auto &ch, all_adj_cells) {...
 
-		//ËÑ¼¯ÄÇĞ©ÆÕÍ¨ÇøÓò£¨¼´²»ÊÇÔÚ½»²æÇøÓò£©ÉÏµÄĞÂµÄÁùÃæÌåµÄ°Ë¸ö¶¥µã
+		//æœé›†é‚£äº›æ™®é€šåŒºåŸŸï¼ˆå³ä¸æ˜¯åœ¨äº¤å‰åŒºåŸŸï¼‰ä¸Šçš„æ–°çš„å…­é¢ä½“çš„å…«ä¸ªé¡¶ç‚¹
 		std::vector<std::vector<OvmVeH> > ord_newly_created_cells_recipes;
 		foreach (auto &fh, inflation_quad_set) {
 			auto hfh1 = mesh->halfface_handle (fh, 0), hfh2 = mesh->halfface_handle (fh, 1);
@@ -242,7 +242,7 @@ namespace JC{
 			ord_newly_created_cells_recipes.push_back (ch_vhs);
 		}
 
-		//ËÑ¼¯½»²æÇøÓòĞÂµÄÁùÃæÌåµÄ°Ë¸ö¶¥µã
+		//æœé›†äº¤å‰åŒºåŸŸæ–°çš„å…­é¢ä½“çš„å…«ä¸ªé¡¶ç‚¹
 		std::vector<std::vector<OvmVeH> > int_newly_created_cells_recipes;
 		foreach (auto &eh, int_ehs) {
 			auto heh = mesh->halfedge_handle (eh, 0);
@@ -275,15 +275,15 @@ namespace JC{
 
 
 		OpenVolumeMesh::StatusAttrib status_attrib (*mesh);
-		//Ê×ÏÈÉ¾³ı¾ÉµÄĞèÒªÉ¾³ıµÄ¶¥µã£¬Á¬´øÉ¾³ıÁËÓë´ËÏàÁÚµÄÁùÃæÌå
+		//é¦–å…ˆåˆ é™¤æ—§çš„éœ€è¦åˆ é™¤çš„é¡¶ç‚¹ï¼Œè¿å¸¦åˆ é™¤äº†ä¸æ­¤ç›¸é‚»çš„å…­é¢ä½“
 		foreach (auto &ch, all_adj_cells)
 			status_attrib[ch].set_deleted (true);
 	
 		status_attrib.garbage_collection (true);
 
 
-		//old_new_vhs_mapping´æ´¢¾ÉµÄµã£¨¾­¹ıÇ°Ãæ·ÖÁÑºóµÄµã£¬²¢²»ÊÇoriginalµÄµã£©ºÍĞÂµÄµãÖ®¼äµÄ¶ÔÓ¦¹ØÏµ
-		//ÓÉÓÚÊÇ·ÖÁÑºóµÄµã£¬Òò´ËÕâ¸ö¶ÔÓ¦¹ØÏµÊÇÒ»¶ÔÒ»Ó³Éä
+		//old_new_vhs_mappingå­˜å‚¨æ—§çš„ç‚¹ï¼ˆç»è¿‡å‰é¢åˆ†è£‚åçš„ç‚¹ï¼Œå¹¶ä¸æ˜¯originalçš„ç‚¹ï¼‰å’Œæ–°çš„ç‚¹ä¹‹é—´çš„å¯¹åº”å…³ç³»
+		//ç”±äºæ˜¯åˆ†è£‚åçš„ç‚¹ï¼Œå› æ­¤è¿™ä¸ªå¯¹åº”å…³ç³»æ˜¯ä¸€å¯¹ä¸€æ˜ å°„
 		//std::hash_map<OvmVeH, OvmVeH> old_new_vhs_mapping;
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it){
 			auto new_vh = *v_it;
@@ -292,11 +292,11 @@ namespace JC{
 				old_new_vhs_mapping.insert (std::make_pair (ori_vh, new_vh));
 		}
 
-		//vhsÊÇÖ®Ç°±£´æµÄµãĞòÁĞ£¬fUpdateVhsÓÃÓÚ¸üĞÂÕâ¸öµãĞòÁĞ£¬
-		//Èç¹ûvhsÖĞµÄµãÔÚold_new_vhs_mappingÖĞÄÜ¹»ÕÒµ½£¬ËµÃ÷garbage_collection¹ı³ÌÖĞ²¢Ã»ÓĞ½«ÆäÉ¾³ı£¬
-		//Òò´ËOpenVolumeMesh×Ô¶¯¸üĞÂÁËV_PREV_HANDLEÖĞµÄÊôĞÔ£»
-		//Èç¹ûvhsÖĞµÄµã²»ÄÜ¹»ÔÚold_new_vhs_mappingÖĞÕÒµ½£¬ËµÃ÷ÔÚgarbage_collectionÖĞÉ¾³ıÁË£¬
-		//Òò´ËĞèÒª¸ù¾İÖ®Ç°±£´æ×Åvh_info_dbÖĞ¸ÃµãµÄ¼¸ºÎ×ø±êÎ»ÖÃ¼°ÆäËûĞÅÏ¢½«ÆäÖØ½¨£¬Í¬Ê±¸üĞÂV_PREV_HANDLE¸Ãµã´æ´¢µÄĞÅÏ¢
+		//vhsæ˜¯ä¹‹å‰ä¿å­˜çš„ç‚¹åºåˆ—ï¼ŒfUpdateVhsç”¨äºæ›´æ–°è¿™ä¸ªç‚¹åºåˆ—ï¼Œ
+		//å¦‚æœvhsä¸­çš„ç‚¹åœ¨old_new_vhs_mappingä¸­èƒ½å¤Ÿæ‰¾åˆ°ï¼Œè¯´æ˜garbage_collectionè¿‡ç¨‹ä¸­å¹¶æ²¡æœ‰å°†å…¶åˆ é™¤ï¼Œ
+		//å› æ­¤OpenVolumeMeshè‡ªåŠ¨æ›´æ–°äº†V_PREV_HANDLEä¸­çš„å±æ€§ï¼›
+		//å¦‚æœvhsä¸­çš„ç‚¹ä¸èƒ½å¤Ÿåœ¨old_new_vhs_mappingä¸­æ‰¾åˆ°ï¼Œè¯´æ˜åœ¨garbage_collectionä¸­åˆ é™¤äº†ï¼Œ
+		//å› æ­¤éœ€è¦æ ¹æ®ä¹‹å‰ä¿å­˜ç€vh_info_dbä¸­è¯¥ç‚¹çš„å‡ ä½•åæ ‡ä½ç½®åŠå…¶ä»–ä¿¡æ¯å°†å…¶é‡å»ºï¼ŒåŒæ—¶æ›´æ–°V_PREV_HANDLEè¯¥ç‚¹å­˜å‚¨çš„ä¿¡æ¯
 		auto fUpdateVhs = [&] (std::vector<OvmVeH> &vhs){
 			for (int i = 0; i != vhs.size (); ++i) {
 				auto old_vh = vhs[i];
@@ -375,7 +375,7 @@ namespace JC{
 				}
 			}
 			foreach (auto &eh, new_sheet->ehs)
-				E_SHEET_PTR[eh] = (unsigned long)new_sheet;
+				E_SHEET_PTR[eh] = (unsigned int)new_sheet;
 
 			foreach (auto &ch, new_sheet->chs)
 				new_chs.erase (ch);
@@ -424,15 +424,15 @@ namespace JC{
 	void retrieve_chords (VolumeMesh *mesh, std::unordered_set<OvmFaH> &fhs, ChordSet &chord_set)
 	{
 		chord_set.clear ();
-		if (!mesh->edge_property_exists<unsigned long> ("chordptr")){
-			auto prop = mesh->request_edge_property<unsigned long> ("chordptr", 0);
+		if (!mesh->edge_property_exists<unsigned int> ("chordptr")){
+			auto prop = mesh->request_edge_property<unsigned int> ("chordptr", 0);
 			mesh->set_persistent (prop);
 		}
-		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
-		if (!mesh->edge_property_exists<unsigned long> ("sheetptr")){
+		auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
+		if (!mesh->edge_property_exists<unsigned int> ("sheetptr")){
 			retrieve_sheets (mesh, SheetSet ());
 		}
-		auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 
 		std::unordered_set<OvmEgH> ehs_of_fhs;
 		foreach (auto &fh, fhs){
@@ -441,7 +441,7 @@ namespace JC{
 				ehs_of_fhs.insert (mesh->edge_handle (heh));
 		}
 
-		//ÓÉµ±Ç°µÄseed_ehºÍfh£¬Ò»Ö±µİ¹é²éÕÒ¶Ô±ß£¬Ö±µ½ÕÒµ½±ß½ç»òÕß»Øµ½seed_eh£¨µ±ÊÇÒ»¸öÄÚ²¿»·Â·Ê±£©
+		//ç”±å½“å‰çš„seed_ehå’Œfhï¼Œä¸€ç›´é€’å½’æŸ¥æ‰¾å¯¹è¾¹ï¼Œç›´åˆ°æ‰¾åˆ°è¾¹ç•Œæˆ–è€…å›åˆ°seed_ehï¼ˆå½“æ˜¯ä¸€ä¸ªå†…éƒ¨ç¯è·¯æ—¶ï¼‰
 		auto fTraceForward = [&] (OvmEgH seed_eh, OvmFaH fh, 
 			std::pair<std::vector<OvmEgH>, std::vector<OvmFaH> > &traced_ehs_fhs)->bool{
 				auto oppo_eh = seed_eh;
@@ -465,7 +465,7 @@ namespace JC{
 		while (!ehs_of_fhs.empty ()){
 			OvmEgH seed_eh = *(ehs_of_fhs.begin ());
 
-			//°ÑÈı²¿·Ö»ñÈ¡£¬È»ºó×é×°ÆğÀ´£¬×¢ÒâÁ½²¿·ÖtraceµÄ±ßµÄÅÅÁĞË³ĞòÊÇÏà·´µÄ
+			//æŠŠä¸‰éƒ¨åˆ†è·å–ï¼Œç„¶åç»„è£…èµ·æ¥ï¼Œæ³¨æ„ä¸¤éƒ¨åˆ†traceçš„è¾¹çš„æ’åˆ—é¡ºåºæ˜¯ç›¸åçš„
 			auto adj_fhs = get_adj_faces_around_edge (mesh, seed_eh, true);
 			assert (adj_fhs.size () == 2);
 			std::vector<OvmEgH> chord_ehs;
@@ -485,7 +485,7 @@ namespace JC{
 				foreach (auto &fh, traced_ehs_fhs.second) chord_fhs.insert (chord_fhs.begin (), fh);
 			}
 
-			//»ñµÃÏà¹ØÁªµÄsheet
+			//è·å¾—ç›¸å…³è”çš„sheet
 			DualChord *chord = NULL;
 			QString str;
 			foreach (auto &eh, chord_ehs){
@@ -507,7 +507,7 @@ namespace JC{
 			chord->ordered_ehs = chord_ehs; chord->ordered_fhs = chord_fhs;
 
 			foreach (auto &eh, chord_ehs){
-				E_CHORD_PTR[eh] = (unsigned long)chord;
+				E_CHORD_PTR[eh] = (unsigned int)chord;
 				ehs_of_fhs.erase (eh);
 			}
 			chord_set.insert (chord);
@@ -572,15 +572,56 @@ namespace JC{
 			}//end for (auto hehf_iter = mesh->hehf_iter (start_heh); hehf_iter; ++hehf_iter){...
 		}//end while (!spread_set.empty ()){...
 	}
+	void restore_sheets_from_file (VolumeMesh *mesh, SheetSet &sheet_set)
+	{
+		if (!mesh->mesh_property_exists<bool> ("dual"))
+			return;
+		sheet_set.clear ();
+		
+		if (!mesh->edge_property_exists<unsigned int> ("sheetptr")) return;
 
+		auto old_new_sheet_ptr_mapping = new std::map<unsigned int, DualSheet *>();
+
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
+
+		for (auto e_it = mesh->edges_begin (); e_it != mesh->edges_end (); ++e_it){
+			auto eh = *e_it;
+			auto old_sheet_ptr = E_SHEET_PTR[eh];
+			DualSheet *sheet_of_this_eh = NULL;
+
+			auto locate = old_new_sheet_ptr_mapping->find (old_sheet_ptr);
+			if (locate == old_new_sheet_ptr_mapping->end ()){
+				auto new_sheet = new DualSheet (mesh);
+				old_new_sheet_ptr_mapping->insert (std::make_pair (old_sheet_ptr, new_sheet));
+				new_sheet->ehs.insert (eh);
+				E_SHEET_PTR[eh] = (unsigned int)new_sheet;
+				sheet_of_this_eh = new_sheet;
+			}else{
+				sheet_of_this_eh = locate->second;
+				sheet_of_this_eh->ehs.insert (eh);
+				//æ›´æ–°E_SHEET_PTRä¸­è¯¥è¾¹å­˜æ”¾çš„sheetæŒ‡é’ˆ
+				E_SHEET_PTR[eh] = (unsigned int)(sheet_of_this_eh);
+			}
+			//å°†ehå‘¨å›´ç›¸é‚»çš„å…­é¢ä½“ä¹Ÿæ”¾å…¥è¯¥sheetä¸­
+			JC::get_adj_hexas_around_edge (mesh, eh, sheet_of_this_eh->chs);
+		}
+
+		foreach (auto &p, *old_new_sheet_ptr_mapping)
+			sheet_set.insert (p.second);
+
+		delete old_new_sheet_ptr_mapping;
+	}
 	void retrieve_sheets (VolumeMesh *mesh, SheetSet &sheet_set)
 	{
+		if (mesh->mesh_property_exists<bool> ("dual"))
+			return restore_sheets_from_file (mesh, sheet_set);
+
 		sheet_set.clear ();
-		if (!mesh->edge_property_exists<unsigned long> ("sheetptr")){
-			auto prop = mesh->request_edge_property<unsigned long> ("sheetptr", 0);
+		if (!mesh->edge_property_exists<unsigned int> ("sheetptr")){
+			auto prop = mesh->request_edge_property<unsigned int> ("sheetptr", 0);
 			mesh->set_persistent (prop);
 		}
-		auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 		auto E_VISITED = mesh->request_edge_property<bool> ("visied", false);
 
 		int sheet_count = 0;
@@ -605,7 +646,7 @@ namespace JC{
 
 			sheet->ehs = sheet_ehs; sheet->chs = sheet_chs; 
 			foreach (auto &eh, sheet_ehs){
-				E_SHEET_PTR[eh] = (unsigned long)sheet;
+				E_SHEET_PTR[eh] = (unsigned int)sheet;
 				all_ehs.erase (eh);
 			}
 
@@ -797,41 +838,41 @@ namespace JC{
 
 	bool one_simple_sheet_extraction (VolumeMesh *mesh, DualSheet *sheet, std::unordered_set<OvmFaH> &result_fhs)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 		auto V_PREV_HANDLE = mesh->request_vertex_property<OvmVeH> ("prevhandle");
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 			V_PREV_HANDLE[*v_it] = *v_it;
 
-		auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
-		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
+		auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
 
 
-		//ÅĞ¶ÏÒ»ÏÂÄÄĞ©Çé¿öÊÇÎŞ·¨´¦ÀíµÄ£¨´ÖÂÔµÄÅĞ¶Ï£¬ÓĞĞ©¼«¶ËµÄÇé¿öÊÇÎŞ·¨ÅĞ¶ÏµÄ£¡£©
+		//åˆ¤æ–­ä¸€ä¸‹å“ªäº›æƒ…å†µæ˜¯æ— æ³•å¤„ç†çš„ï¼ˆç²—ç•¥çš„åˆ¤æ–­ï¼Œæœ‰äº›æç«¯çš„æƒ…å†µæ˜¯æ— æ³•åˆ¤æ–­çš„ï¼ï¼‰
 		foreach (auto &eh, sheet->ehs){
 			auto vh1 = mesh->edge (eh).from_vertex (),
 				vh2 = mesh->edge (eh).to_vertex ();
 			auto entity1 = (ENTITY*)(V_ENTITY_PTR[vh1]),
 				entity2 = (ENTITY*)(V_ENTITY_PTR[vh2]);
-			//Èç¹ûÁ½¸ö¶¥µã¶¼ÔÚ¼¸ºÎµãÉÏÊÇ²»ĞĞµÄ
+			//å¦‚æœä¸¤ä¸ªé¡¶ç‚¹éƒ½åœ¨å‡ ä½•ç‚¹ä¸Šæ˜¯ä¸è¡Œçš„
 			if (is_VERTEX (entity1) && is_VERTEX (entity2))
 				return false;
-			////Èç¹ûÁ½¸ö¶¥µã¶¼ÔÚ¼¸ºÎ±ßÉÏ£¬µ«ÊÇËùÔÚ¼¸ºÎ±ßÓÖ²»Í¬£¬Ò²ÊÇ²»ĞĞµÄ
+			////å¦‚æœä¸¤ä¸ªé¡¶ç‚¹éƒ½åœ¨å‡ ä½•è¾¹ä¸Šï¼Œä½†æ˜¯æ‰€åœ¨å‡ ä½•è¾¹åˆä¸åŒï¼Œä¹Ÿæ˜¯ä¸è¡Œçš„
 			//else if (is_EDGE (entity1) && is_EDGE (entity2) && entity1 != entity2)
 			//	return false;
-			////Èç¹ûÁ½¸ö¶¥µã¶¼ÔÚ¼¸ºÎÃæÉÏ£¬µ«ÊÇËùÔÚ¼¸ºÎÃæÓÖ²»Í¬£¬Ò²ÊÇ²»ĞĞµÄ
+			////å¦‚æœä¸¤ä¸ªé¡¶ç‚¹éƒ½åœ¨å‡ ä½•é¢ä¸Šï¼Œä½†æ˜¯æ‰€åœ¨å‡ ä½•é¢åˆä¸åŒï¼Œä¹Ÿæ˜¯ä¸è¡Œçš„
 			//else if (is_FACE (entity1) && is_FACE (entity2) && entity1 != entity2)
 			//	return false;
 		}
 
-		//»ñÈ¡sheetÉÏËùÓĞµÄ¶¥µã
+		//è·å–sheetä¸Šæ‰€æœ‰çš„é¡¶ç‚¹
 		std::unordered_set<OvmVeH> vhs_on_sheet;
 		foreach (auto &eh, sheet->ehs){
 			auto vh1 = mesh->edge (eh).from_vertex (),
 				vh2 = mesh->edge (eh).to_vertex ();
 			vhs_on_sheet.insert (vh1); vhs_on_sheet.insert (vh2);
 		}
-		//»ñµÃºÍsheetÉÏµÄÁùÃæÌåÏàÁÚµÄÁùÃæÌå£¬ÕâĞ©ÁùÃæÌå¶¼ĞèÒª½øĞĞÖØ½¨£¨¼´ÏÈÉ¾³ı£¬È»ºó¸üĞÂËüÃÇµÄ°Ë¸ö¶¥µãµÄ¾ä±ú£¬È»ºóÔÙÖØ½¨£©
+		//è·å¾—å’Œsheetä¸Šçš„å…­é¢ä½“ç›¸é‚»çš„å…­é¢ä½“ï¼Œè¿™äº›å…­é¢ä½“éƒ½éœ€è¦è¿›è¡Œé‡å»ºï¼ˆå³å…ˆåˆ é™¤ï¼Œç„¶åæ›´æ–°å®ƒä»¬çš„å…«ä¸ªé¡¶ç‚¹çš„å¥æŸ„ï¼Œç„¶åå†é‡å»ºï¼‰
 		std::unordered_set<OvmCeH> adj_chs_need_rebuilding;
 		foreach (auto &vh, vhs_on_sheet){
 			std::unordered_set<OvmCeH> adj_chs;
@@ -842,7 +883,7 @@ namespace JC{
 			}
 		}
 
-		//½«sheetµÄËùÓĞ±ß½øĞĞ·Ö×é£¬Ã¿×éÄÚµÄ±ß¾ùÓĞÁ¬½Ó¹ØÏµ
+		//å°†sheetçš„æ‰€æœ‰è¾¹è¿›è¡Œåˆ†ç»„ï¼Œæ¯ç»„å†…çš„è¾¹å‡æœ‰è¿æ¥å…³ç³»
 		std::unordered_set<OvmEgH> all_ehs_in_sheet(sheet->ehs);
 		auto fTraceThrough = [&] (OvmEgH start_eh, OvmVeH start_vh, std::unordered_set<OvmEgH> &ehs)->bool{
 			ehs.insert (start_eh);
@@ -903,7 +944,7 @@ namespace JC{
 			unsigned long entity_ptr;
 		};
 
-		//ÓÉÓÚºóÃæµÄÉ¾³ı²Ù×÷¿ÉÄÜ»á½«Ò»Ğ©ÓÎÀëµÄµãÒ»²¢É¾³ı£¬ËùÒÔĞèÒªÏÈ½«ËùÓĞ¿ÉÄÜ±»É¾³ıµÄµãµÄĞÅÏ¢¶¼´æÆğÀ´
+		//ç”±äºåé¢çš„åˆ é™¤æ“ä½œå¯èƒ½ä¼šå°†ä¸€äº›æ¸¸ç¦»çš„ç‚¹ä¸€å¹¶åˆ é™¤ï¼Œæ‰€ä»¥éœ€è¦å…ˆå°†æ‰€æœ‰å¯èƒ½è¢«åˆ é™¤çš„ç‚¹çš„ä¿¡æ¯éƒ½å­˜èµ·æ¥
 
 		std::map<OvmVeH, PointInfo> vhs_info_for_readd;
 		std::unordered_set<OvmVeH> new_vhs;
@@ -915,8 +956,8 @@ namespace JC{
 					vh2 = mesh->edge (eh).to_vertex ();
 				vhs.insert (vh1); vhs.insert (vh2);
 			}
-			//ÔÚºÏ²¢µÄÊ±ºò£¬ĞèÒª¿¼ÂÇÕâĞ©ºÏ²¢µÄµãµÄÀàĞÍ
-			//ÀıÈç£¬µ±Ò»¸öÎ»ÓÚ¶¥µãÉÏµÄµãºÍÒ»¸ö²»ÔÚ¶¥µãÉÏµÄµãÒªºÏ²¢Ê±£¬¾ÍĞèÒªÈÃĞÂµÄµãÒ²Î»ÓÚ¶¥µãÉÏ
+			//åœ¨åˆå¹¶çš„æ—¶å€™ï¼Œéœ€è¦è€ƒè™‘è¿™äº›åˆå¹¶çš„ç‚¹çš„ç±»å‹
+			//ä¾‹å¦‚ï¼Œå½“ä¸€ä¸ªä½äºé¡¶ç‚¹ä¸Šçš„ç‚¹å’Œä¸€ä¸ªä¸åœ¨é¡¶ç‚¹ä¸Šçš„ç‚¹è¦åˆå¹¶æ—¶ï¼Œå°±éœ€è¦è®©æ–°çš„ç‚¹ä¹Ÿä½äºé¡¶ç‚¹ä¸Š
 			OvmVeH ref_vh = mesh->InvalidVertexHandle;
 			foreach (auto &vh, vhs){
 				ENTITY *entity = (ENTITY*)(V_ENTITY_PTR[vh]);
@@ -965,13 +1006,13 @@ namespace JC{
 				old_new_vhs_mapping.insert (std::make_pair (vh, new_vh));
 		}
 
-		//»ñµÃadj_chs_need_rebuildingÉÏµÄÁùÃæÌåµÄ°Ë¸ö¶¥µã
+		//è·å¾—adj_chs_need_rebuildingä¸Šçš„å…­é¢ä½“çš„å…«ä¸ªé¡¶ç‚¹
 		std::map<std::set<OvmVeH>, unsigned long> old_mesh_sheet_ptr, old_mesh_chord_ptr;
 		std::hash_map<OvmCeH, std::vector<OvmVeH> > adj_chs_rebuild_recipe;
 		std::unordered_set<OvmVeH> vhs_not_replaced;
 		foreach (auto &ch, adj_chs_need_rebuilding){
 			std::vector<OvmVeH> one_chs_recipe;
-			std::hash_map<OvmVeH, OvmVeH> curr_old_new_vhs_mapping;//´æ´¢µ±Ç°ÁùÃæÌåÖĞĞÂ¾ÉµãµÄÓ³Éä¹ØÏµ
+			std::hash_map<OvmVeH, OvmVeH> curr_old_new_vhs_mapping;//å­˜å‚¨å½“å‰å…­é¢ä½“ä¸­æ–°æ—§ç‚¹çš„æ˜ å°„å…³ç³»
 			for (auto hv_it = mesh->hv_iter (ch); hv_it; ++hv_it){
 				auto vh = *hv_it;
 				auto locate = old_new_vhs_mapping.find (vh);
@@ -1001,7 +1042,7 @@ namespace JC{
 
 		}
 
-		//¶Ôadj_chs_rebuild_recipeÖĞÄÇĞ©·ÇÊÕËõµãÒ²½«ÆäĞÅÏ¢·ÅÈëvhs_info_for_readdÖĞ£¬ÈçÉÏÃæËùËµ£¬ÒÔÓÃÓÚ±»É¾³ıºóµÄÖØĞÂÌí¼Ó
+		//å¯¹adj_chs_rebuild_recipeä¸­é‚£äº›éæ”¶ç¼©ç‚¹ä¹Ÿå°†å…¶ä¿¡æ¯æ”¾å…¥vhs_info_for_readdä¸­ï¼Œå¦‚ä¸Šé¢æ‰€è¯´ï¼Œä»¥ç”¨äºè¢«åˆ é™¤åçš„é‡æ–°æ·»åŠ 
 		foreach (auto &vh, vhs_not_replaced){
 			PointInfo new_pt_info;
 			new_pt_info.entity_ptr = V_ENTITY_PTR[vh];
@@ -1010,10 +1051,10 @@ namespace JC{
 		}
 
 		OpenVolumeMesh::StatusAttrib status_attrib (*mesh);
-		//Ê×ÏÈÉ¾³ısheetÖĞµÄÁùÃæÌå
+		//é¦–å…ˆåˆ é™¤sheetä¸­çš„å…­é¢ä½“
 		foreach (auto &ch, sheet->chs)
 			status_attrib[ch].set_deleted (true);
-		//È»ºóÉ¾³ıºÍsheetÖĞµÄÁùÃæÌåÏàÁÚµÄÁùÃæÌå
+		//ç„¶ååˆ é™¤å’Œsheetä¸­çš„å…­é¢ä½“ç›¸é‚»çš„å…­é¢ä½“
 		foreach (auto &ch, adj_chs_need_rebuilding)
 			status_attrib[ch].set_deleted (true);
 
@@ -1024,7 +1065,7 @@ namespace JC{
 			old_new_vhs_mapping2.insert (std::make_pair (V_PREV_HANDLE[*v_it], *v_it));
 
 
-		//¸üĞÂadj_chs_rebuild_recipeÖĞµÄ¾ÉµÄ¶¥µã¾ä±úÎªĞÂµÄ¶¥µã¾ä±ú
+		//æ›´æ–°adj_chs_rebuild_recipeä¸­çš„æ—§çš„é¡¶ç‚¹å¥æŸ„ä¸ºæ–°çš„é¡¶ç‚¹å¥æŸ„
 		foreach (auto &p, adj_chs_rebuild_recipe){
 			std::vector<OvmVeH> one_recipe = p.second;
 			for (int i = 0; i != one_recipe.size (); ++i){
@@ -1071,7 +1112,7 @@ namespace JC{
 		}
 
 
-		//ÏÂÃæËÑ¼¯ÓÉsheet³éÈ¡¶øÉú³ÉµÄÃæ¼¯£¬ÕâĞ©ÃæµÄËÄ¸ö¶Ëµã¶¼ÊÇnew_vhsÖĞµÄµã
+		//ä¸‹é¢æœé›†ç”±sheetæŠ½å–è€Œç”Ÿæˆçš„é¢é›†ï¼Œè¿™äº›é¢çš„å››ä¸ªç«¯ç‚¹éƒ½æ˜¯new_vhsä¸­çš„ç‚¹
 		std::unordered_set<OvmVeH> updated_new_vhs;
 		foreach (auto &vh, new_vhs)
 			updated_new_vhs.insert (old_new_vhs_mapping2[vh]);
@@ -1097,14 +1138,14 @@ namespace JC{
 
 	void column_collapse (VolumeMesh *mesh, DualColumn *column, std::pair<OvmVeH, OvmVeH> &collapse_vhs_pair, std::hash_map<OvmVeH, OvmVeH> &old_new_vhs_mapping)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		auto V_PREV_HANDLE = mesh->request_vertex_property<OvmVeH> ("prevhandle", mesh->InvalidVertexHandle);
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 			V_PREV_HANDLE[*v_it] = *v_it;
 
-		//Ê×ÏÈ»ñµÃËùÓĞµÄºÏ²¢µã¶Ô
+		//é¦–å…ˆè·å¾—æ‰€æœ‰çš„åˆå¹¶ç‚¹å¯¹
 		std::vector<std::pair<OvmVeH, OvmVeH> > all_collapse_vhs_pairs;
 		auto fhs_array = column->ordered_fhs;
 		auto adj_vhs = get_adj_vertices_around_face (mesh, fhs_array.front ());
@@ -1142,7 +1183,7 @@ namespace JC{
 			prev_vhs_pair = next_vhs_pair;
 		}//end for (int i = 1; i != fhs_array.size (); ++i){...
 
-		//»ñµÃËùÓĞºÍfirstµã»òÕßsecondµãÉÏÏàÁÚµÄÁùÃæÌå£¬ÒÔ±ãÓÚºóÃæ½øĞĞÖØ½¨
+		//è·å¾—æ‰€æœ‰å’Œfirstç‚¹æˆ–è€…secondç‚¹ä¸Šç›¸é‚»çš„å…­é¢ä½“ï¼Œä»¥ä¾¿äºåé¢è¿›è¡Œé‡å»º
 		std::unordered_set<OvmCeH> all_adj_cells;
 		std::hash_map<OvmVeH, OvmVeH> collapse_vhs_new_vh_mapping;
 
@@ -1186,7 +1227,7 @@ namespace JC{
 		}
 
 		OpenVolumeMesh::StatusAttrib status_attrib (*mesh);
-		//Ê×ÏÈÉ¾³ı¾ÉµÄĞèÒªÉ¾³ıµÄ¶¥µã£¬Á¬´øÉ¾³ıÁËÓë´ËÏàÁÚµÄÁùÃæÌå
+		//é¦–å…ˆåˆ é™¤æ—§çš„éœ€è¦åˆ é™¤çš„é¡¶ç‚¹ï¼Œè¿å¸¦åˆ é™¤äº†ä¸æ­¤ç›¸é‚»çš„å…­é¢ä½“
 		foreach (auto &ch, column->ordered_chs)
 			status_attrib[ch].set_deleted (true);
 
@@ -1203,11 +1244,11 @@ namespace JC{
 				old_new_vhs_mapping.insert (std::make_pair (ori_vh, new_vh));
 		}
 
-		//vhsÊÇÖ®Ç°±£´æµÄµãĞòÁĞ£¬fUpdateVhsÓÃÓÚ¸üĞÂÕâ¸öµãĞòÁĞ£¬
-		//Èç¹ûvhsÖĞµÄµãÔÚold_new_vhs_mappingÖĞÄÜ¹»ÕÒµ½£¬ËµÃ÷garbage_collection¹ı³ÌÖĞ²¢Ã»ÓĞ½«ÆäÉ¾³ı£¬
-		//Òò´ËOpenVolumeMesh×Ô¶¯¸üĞÂÁËV_PREV_HANDLEÖĞµÄÊôĞÔ£»
-		//Èç¹ûvhsÖĞµÄµã²»ÄÜ¹»ÔÚold_new_vhs_mappingÖĞÕÒµ½£¬ËµÃ÷ÔÚgarbage_collectionÖĞÉ¾³ıÁË£¬
-		//Òò´ËĞèÒª¸ù¾İÖ®Ç°±£´æ×Åvh_info_dbÖĞ¸ÃµãµÄ¼¸ºÎ×ø±êÎ»ÖÃ¼°ÆäËûĞÅÏ¢½«ÆäÖØ½¨£¬Í¬Ê±¸üĞÂV_PREV_HANDLE¸Ãµã´æ´¢µÄĞÅÏ¢
+		//vhsæ˜¯ä¹‹å‰ä¿å­˜çš„ç‚¹åºåˆ—ï¼ŒfUpdateVhsç”¨äºæ›´æ–°è¿™ä¸ªç‚¹åºåˆ—ï¼Œ
+		//å¦‚æœvhsä¸­çš„ç‚¹åœ¨old_new_vhs_mappingä¸­èƒ½å¤Ÿæ‰¾åˆ°ï¼Œè¯´æ˜garbage_collectionè¿‡ç¨‹ä¸­å¹¶æ²¡æœ‰å°†å…¶åˆ é™¤ï¼Œ
+		//å› æ­¤OpenVolumeMeshè‡ªåŠ¨æ›´æ–°äº†V_PREV_HANDLEä¸­çš„å±æ€§ï¼›
+		//å¦‚æœvhsä¸­çš„ç‚¹ä¸èƒ½å¤Ÿåœ¨old_new_vhs_mappingä¸­æ‰¾åˆ°ï¼Œè¯´æ˜åœ¨garbage_collectionä¸­åˆ é™¤äº†ï¼Œ
+		//å› æ­¤éœ€è¦æ ¹æ®ä¹‹å‰ä¿å­˜ç€vh_info_dbä¸­è¯¥ç‚¹çš„å‡ ä½•åæ ‡ä½ç½®åŠå…¶ä»–ä¿¡æ¯å°†å…¶é‡å»ºï¼ŒåŒæ—¶æ›´æ–°V_PREV_HANDLEè¯¥ç‚¹å­˜å‚¨çš„ä¿¡æ¯
 		auto fUpdateVhs = [&] (std::vector<OvmVeH> &vhs){
 			for (int i = 0; i != vhs.size (); ++i) {
 				auto old_vh = vhs[i];
@@ -1235,14 +1276,14 @@ namespace JC{
 	void columns_collapse (VolumeMesh *mesh, std::map<DualColumn *, std::pair<OvmVeH, OvmVeH> > &collapse_vhs_pairs,
 		std::hash_map<OvmVeH, OvmVeH> &old_new_vhs_mapping)
 	{
-		assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+		assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+		auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 		auto V_PREV_HANDLE = mesh->request_vertex_property<OvmVeH> ("prevhandle", mesh->InvalidVertexHandle);
 		for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it)
 			V_PREV_HANDLE[*v_it] = *v_it;
 
-		//Ê×ÏÈ»ñµÃËùÓĞµÄºÏ²¢µã¶Ô
+		//é¦–å…ˆè·å¾—æ‰€æœ‰çš„åˆå¹¶ç‚¹å¯¹
 		std::vector<std::pair<OvmVeH, OvmVeH> > all_collapse_vhs_pairs;
 		foreach (auto &p, collapse_vhs_pairs){
 			auto fhs_array = p.first->ordered_fhs;
@@ -1282,11 +1323,11 @@ namespace JC{
 			}//end for (int i = 1; i != fhs_array.size (); ++i){...
 		}
 		
-		//»ñµÃËùÓĞºÍfirstµã»òÕßsecondµãÉÏÏàÁÚµÄÁùÃæÌå£¬ÒÔ±ãÓÚºóÃæ½øĞĞÖØ½¨
+		//è·å¾—æ‰€æœ‰å’Œfirstç‚¹æˆ–è€…secondç‚¹ä¸Šç›¸é‚»çš„å…­é¢ä½“ï¼Œä»¥ä¾¿äºåé¢è¿›è¡Œé‡å»º
 		std::unordered_set<OvmCeH> all_adj_cells;
 		std::hash_map<OvmVeH, OvmVeH> collapse_vhs_new_vh_mapping;
 
-		//»ñµÃËùÓĞÔÚcolumnsÉÏµÄÁùÃæÌå
+		//è·å¾—æ‰€æœ‰åœ¨columnsä¸Šçš„å…­é¢ä½“
 		std::unordered_set<OvmCeH> all_chs_on_columns;
 		foreach (auto &p, collapse_vhs_pairs){
 			foreach (auto &ch, p.first->ordered_chs)
@@ -1333,7 +1374,7 @@ namespace JC{
 		}
 
 		OpenVolumeMesh::StatusAttrib status_attrib (*mesh);
-		//Ê×ÏÈÉ¾³ı¾ÉµÄĞèÒªÉ¾³ıµÄ¶¥µã£¬Á¬´øÉ¾³ıÁËÓë´ËÏàÁÚµÄÁùÃæÌå
+		//é¦–å…ˆåˆ é™¤æ—§çš„éœ€è¦åˆ é™¤çš„é¡¶ç‚¹ï¼Œè¿å¸¦åˆ é™¤äº†ä¸æ­¤ç›¸é‚»çš„å…­é¢ä½“
 		foreach (auto &p, collapse_vhs_pairs){
 			auto column = p.first;
 			foreach (auto &ch, column->ordered_chs)
@@ -1353,11 +1394,11 @@ namespace JC{
 				old_new_vhs_mapping.insert (std::make_pair (ori_vh, new_vh));
 		}
 
-		//vhsÊÇÖ®Ç°±£´æµÄµãĞòÁĞ£¬fUpdateVhsÓÃÓÚ¸üĞÂÕâ¸öµãĞòÁĞ£¬
-		//Èç¹ûvhsÖĞµÄµãÔÚold_new_vhs_mappingÖĞÄÜ¹»ÕÒµ½£¬ËµÃ÷garbage_collection¹ı³ÌÖĞ²¢Ã»ÓĞ½«ÆäÉ¾³ı£¬
-		//Òò´ËOpenVolumeMesh×Ô¶¯¸üĞÂÁËV_PREV_HANDLEÖĞµÄÊôĞÔ£»
-		//Èç¹ûvhsÖĞµÄµã²»ÄÜ¹»ÔÚold_new_vhs_mappingÖĞÕÒµ½£¬ËµÃ÷ÔÚgarbage_collectionÖĞÉ¾³ıÁË£¬
-		//Òò´ËĞèÒª¸ù¾İÖ®Ç°±£´æ×Åvh_info_dbÖĞ¸ÃµãµÄ¼¸ºÎ×ø±êÎ»ÖÃ¼°ÆäËûĞÅÏ¢½«ÆäÖØ½¨£¬Í¬Ê±¸üĞÂV_PREV_HANDLE¸Ãµã´æ´¢µÄĞÅÏ¢
+		//vhsæ˜¯ä¹‹å‰ä¿å­˜çš„ç‚¹åºåˆ—ï¼ŒfUpdateVhsç”¨äºæ›´æ–°è¿™ä¸ªç‚¹åºåˆ—ï¼Œ
+		//å¦‚æœvhsä¸­çš„ç‚¹åœ¨old_new_vhs_mappingä¸­èƒ½å¤Ÿæ‰¾åˆ°ï¼Œè¯´æ˜garbage_collectionè¿‡ç¨‹ä¸­å¹¶æ²¡æœ‰å°†å…¶åˆ é™¤ï¼Œ
+		//å› æ­¤OpenVolumeMeshè‡ªåŠ¨æ›´æ–°äº†V_PREV_HANDLEä¸­çš„å±æ€§ï¼›
+		//å¦‚æœvhsä¸­çš„ç‚¹ä¸èƒ½å¤Ÿåœ¨old_new_vhs_mappingä¸­æ‰¾åˆ°ï¼Œè¯´æ˜åœ¨garbage_collectionä¸­åˆ é™¤äº†ï¼Œ
+		//å› æ­¤éœ€è¦æ ¹æ®ä¹‹å‰ä¿å­˜ç€vh_info_dbä¸­è¯¥ç‚¹çš„å‡ ä½•åæ ‡ä½ç½®åŠå…¶ä»–ä¿¡æ¯å°†å…¶é‡å»ºï¼ŒåŒæ—¶æ›´æ–°V_PREV_HANDLEè¯¥ç‚¹å­˜å‚¨çš„ä¿¡æ¯
 		auto fUpdateVhs = [&] (std::vector<OvmVeH> &vhs){
 			for (int i = 0; i != vhs.size (); ++i) {
 				auto old_vh = vhs[i];

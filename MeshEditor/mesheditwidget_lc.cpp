@@ -23,7 +23,7 @@ void MeshEditWidget::on_analyze_for_lc ()
 	}
 
 	FACE *inter_face = NULL;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 	foreach (OvmEgH eh, selected_ehs){
 		OvmVeH vh1 = mesh->edge (eh).from_vertex (),
 			vh2 = mesh->edge (eh).to_vertex ();

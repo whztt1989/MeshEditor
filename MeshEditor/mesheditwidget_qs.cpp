@@ -188,9 +188,9 @@ int which_end_node_pair (VolumeMesh *mesh, OvmVeH int_vh, std::vector<std::pair<
 void rate_boundary_vhs (VolumeMesh *mesh, std::unordered_set<OvmFaH> &forbidden_fhs,
 	std::vector<std::unordered_set<OvmVeH> > &layered_vhs)
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
 
-	auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	//获得forbidden fhs的外围点
 	std::unordered_set<OvmVeH> vhs_on_front, vhs_left, vhs_on_forbidded_fhs_bnd, vhs_visited;
@@ -319,9 +319,9 @@ void rate_inner_vhs (VolumeMesh *mesh, std::vector<std::unordered_set<OvmVeH> > 
 void rate_all_vhs (VolumeMesh *mesh, std::unordered_set<OvmFaH> &forbidden_fhs,
 	std::vector<std::unordered_set<OvmVeH> > &layered_vhs)
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
 
-	auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	//获得forbidden fhs的外围点
 	std::unordered_set<OvmVeH> vhs_on_front, vhs_left, vhs_on_forbidded_fhs_bnd, vhs_visited;
@@ -401,9 +401,9 @@ void MeshEditWidget::on_complete_loop_for_qs ()
 	//首先对表面顶点进行预处理
 	//获得位于顶点和几何边上的网格点
 	
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
 
-	auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	
 	std::vector<std::unordered_set<OvmVeH> > layered_vhs;

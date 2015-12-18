@@ -100,6 +100,10 @@ MeshEditController::MeshEditController(QWidget *parent)
 		SLOT (on_clear_selection_for_co ()));
 	connect (ui.pb_Select_Chord_By_Idx_For_CO, SIGNAL (clicked ()),
 		SLOT (on_select_chord_by_idx_for_co ()));
+	connect (ui.pb_Select_Edge_For_Adjust_Chord, SIGNAL (clicked ()), SLOT (on_select_edge_for_adjust_chord ()));
+	connect (ui.pb_Select_As_1st_Edge_For_Chord, SIGNAL (clicked ()), SLOT (on_select_as_1st_edge_for_chord ()));
+	connect (ui.pb_Select_As_2nd_Edge_For_Chord, SIGNAL (clicked ()), SLOT (on_select_as_2nd_edge_for_chord ()));
+
 
 	connect (ui.radioButton_Smooth_Whole_For_MO, SIGNAL (clicked ()),
 		SLOT (on_select_smooth_whole_for_mo ()));

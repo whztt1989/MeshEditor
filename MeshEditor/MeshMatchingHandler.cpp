@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QDataStream>
 #include <QObject>
+#include <QMessageBox>
+#include "bool_api_options.hxx"
 
 namespace MM{
 	void adjust_interface_bondary (VolumeMesh *mesh, std::unordered_set<OvmFaH> &inter_fhs, std::set<FACE *> interfaces)
@@ -33,7 +35,7 @@ namespace MM{
 			for (int i = 0; i != tmp_vertices_list.count (); ++i)
 				vertices_list.insert (tmp_vertices_list[i]);
 		}
-		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 		std::unordered_set<OvmVeH> vhs_on_geom_vertices;
 		foreach (auto entity_ptr, vertices_list){
@@ -50,7 +52,7 @@ namespace MM{
 			}
 			mesh->set_vertex (closest_vh, pt);
 			bound_vhs.erase (closest_vh);
-			V_ENT_PTR[closest_vh] = (unsigned long)v;
+			V_ENT_PTR[closest_vh] = (unsigned int)v;
 			vhs_on_geom_vertices.insert (closest_vh);
 		}
 
@@ -137,7 +139,7 @@ namespace MM{
 				double dist;
 				SPAposition pos;
 				if (!JC::contains (vhs_on_geom_vertices, vh)){
-					V_ENT_PTR[vh] = (unsigned long) (on_which_edge);
+					V_ENT_PTR[vh] = (unsigned int) (on_which_edge);
 					auto pt = mesh->vertex (vh);
 					api_entity_point_distance (on_which_edge, POS2SPA(pt), pos, dist);
 					mesh->set_vertex (vh, SPA2POS(pos));
@@ -253,7 +255,7 @@ namespace MM{
 	{
 		VolumeMesh *mesh = mm_data->mesh;
 		auto &inter_fhs = mm_data->inter_patch;
-		auto V_ENT_PTR = mesh->request_vertex_property<unsigned long> ("entityptr", 0);
+		auto V_ENT_PTR = mesh->request_vertex_property<unsigned int> ("entityptr", 0);
 		mesh->set_persistent (V_ENT_PTR);
 
 		ENTITY_LIST vertices_list, edges_list;
@@ -283,33 +285,23 @@ namespace MM{
 			SPAposition spa_pos = POS2SPA(mesh->vertex (vh));
 			ENTITY* on_this_vertex = fOnWhichEntity (vertices_list, spa_pos);
 			if (on_this_vertex)
-				V_ENT_PTR[vh] = (unsigned long)on_this_vertex;
+				V_ENT_PTR[vh] = (unsigned int)on_this_vertex;
 			else{
 				ENTITY* on_this_edge = fOnWhichEntity (edges_list, spa_pos);
 				if (on_this_edge)
-					V_ENT_PTR[vh] = (unsigned long)on_this_edge;
+					V_ENT_PTR[vh] = (unsigned int)on_this_edge;
 			}//end if (on_this_vertex)
 		}
 	}
 }
 
-MeshMatchingHandler::MeshMatchingHandler (MMData *_data1, MMData *_data2, std::set<FACE *> _interfaces)
-	: mm_data1 (_data1), mm_data2 (_data2), interfaces (_interfaces)
-{
-	JC::retrieve_chords (mm_data1->mesh, mm_data1->inter_patch, unmatched_chord_set1);
-	JC::retrieve_chords (mm_data2->mesh, mm_data2->inter_patch, unmatched_chord_set2);
-	myresabs = SPAresabs * 10000;
 
-	get_all_ehs_on_interface (mm_data1);get_all_ehs_on_interface (mm_data2);
-	attach_interface_entity_to_mesh (mm_data1);
-	attach_interface_entity_to_mesh (mm_data2);
-}
-
-MeshMatchingHandler::MeshMatchingHandler ()
+MeshMatchingHandler::MeshMatchingHandler (QWidget *parent)
 {
+	this->parent = parent;
 	mm_data1 = NULL;
 	mm_data2 = NULL;
-	myresabs = SPAresabs * 10000;
+	myresabs = SPAresabs * 1000;
 }
 
 MeshMatchingHandler::~MeshMatchingHandler ()
@@ -318,59 +310,512 @@ MeshMatchingHandler::~MeshMatchingHandler ()
 		delete mm_data1;
 	if (mm_data2)
 		delete mm_data2;
+	foreach (auto f, interfaces)
+		api_del_entity (f);
 }
 
-void MeshMatchingHandler::set_interfaces (std::set<FACE *> _interface)
+bool MeshMatchingHandler::load_mesh_matching_data (QString dir_path)
 {
-	interfaces = _interface;
-}
+	QString part1mesh = dir_path + "\\part1.ovm",
+		part1body = dir_path + "\\part1.sat",
+		part2mesh = dir_path + "\\part2.ovm",
+		part2body = dir_path + "\\part2.sat",
+		chord_pairs_path = dir_path + "\\matched_chord_pairs.dat";
 
-void MeshMatchingHandler::set_part1 (VolumeMesh *mesh, std::unordered_set<OvmFaH> inf_qs)
-{
-	if (mm_data1)
-		delete mm_data1;
-	mm_data1 = new MMData;
-	mm_data1->mesh = mesh;
-	mm_data1->inter_patch = inf_qs;
-	unmatched_chord_set1.clear ();
-	JC::retrieve_chords (mm_data1->mesh, mm_data1->inter_patch, unmatched_chord_set1);
-	get_all_ehs_on_interface (mm_data1);
+	QFileInfo fi1 (part1mesh), fi2 (part1body), fi3 (part2mesh), fi4 (part2body);
+	if (!fi1.exists () || !fi2.exists () || !fi3.exists () || !fi4.exists ()){
+		warning (QObject::tr("打不开文件！"));
+		return false;
+	}
+
+	if (mm_data1) delete mm_data1;
+	if (mm_data2) delete mm_data2;
+
+	mm_data1 = new MMData; mm_data2 = new MMData;
+
+	//加载六面体网格和对应的sat模型
+	mm_data1->mesh = JC::load_volume_mesh (part1mesh.toAscii ().data ());
+	mm_data1->body = JC::load_acis_model (part1body);
+	mm_data2->mesh = JC::load_volume_mesh (part2mesh.toAscii ().data ());
+	mm_data2->body = JC::load_acis_model (part2body);
+
+	if (!locate_interfaces ()){
+		warning (QObject::tr("查找贴合面失败！"));
+		return false;
+	}
+
+	JC::init_volume_mesh (mesh1(), body1 (), myresabs);
+	JC::init_volume_mesh (mesh2(), body2 (), myresabs);
+	//构建或者从六面体网格属性中恢复对偶结构，同时搜集interfaces上的网格边、面
+	construct_dual_structure_and_gather_interface_elements (mm_data1);
+	construct_dual_structure_and_gather_interface_elements (mm_data2);
+
+	//将interface上的面边结构和网格相关联
 	attach_interface_entity_to_mesh (mm_data1);
-}
-
-void MeshMatchingHandler::set_part2 (VolumeMesh *mesh, std::unordered_set<OvmFaH> inf_qs)
-{
-	if (mm_data2)
-		delete mm_data2;
-	mm_data2 = new MMData;
-	mm_data2->mesh = mesh;
-	mm_data2->inter_patch = inf_qs;
-	unmatched_chord_set2.clear ();
-	JC::retrieve_chords (mm_data2->mesh, mm_data2->inter_patch, unmatched_chord_set2);
-	get_all_ehs_on_interface (mm_data2);
 	attach_interface_entity_to_mesh (mm_data2);
+
+	//构建chord匹配关系
+	matched_chord_pairs.clear ();
+	QFileInfo matched_chord_pairs_file (chord_pairs_path);
+	if (matched_chord_pairs_file.exists ()){
+		if (!load_matched_chords (chord_pairs_path)){
+			warning (QObject::tr("chord匹配文件存在但是读取错误！"));
+			return false;
+		}
+	}
+	return true;
 }
 
+bool MeshMatchingHandler::save_mesh_matching_data (QString dir_path)
+{
+	auto fSaving = [&] (MMData *mm_data, QString which_part){
+		auto mesh = mm_data->mesh;
+		auto body = mm_data->body;
+		auto E_CHORD_ORDER = mesh->request_edge_property<int> ("chordorder", 0);
+		foreach (auto c, mm_data->unmatched_chords){
+			for (int i = 0; i != c->ordered_ehs.size (); ++i)
+				E_CHORD_ORDER[c->ordered_ehs[i]] = i;
+			if (c->is_closed){
+				E_CHORD_ORDER[c->ordered_ehs.front ()] = -1;
+			}
+		}
 
+		foreach (auto c, mm_data->matched_chords){
+			for (int i = 0; i != c->ordered_ehs.size (); ++i)
+				E_CHORD_ORDER[c->ordered_ehs[i]] = i;
+			if (c->is_closed){
+				E_CHORD_ORDER[c->ordered_ehs.front ()] = -1;
+			}
+		}
+
+		mesh->set_persistent (E_CHORD_ORDER);
+		auto M_DUAL = mesh->request_mesh_property<bool> ("dual", true);
+		mesh->set_persistent (M_DUAL);
+		JC::save_volume_mesh (mesh, dir_path + "/" + which_part +".ovm");
+		JC::save_acis_entity (body, dir_path + "/" + which_part +".sat");
+	};
+	
+	fSaving (mm_data1, "part1");
+	fSaving (mm_data2, "part2");
+
+	return save_matched_chords (dir_path + "/matched_chord_pairs.dat");
+}
+
+void MeshMatchingHandler::get_quads_on_interfaces (MMData *mm_data)
+{
+	JC::get_fhs_on_acis_faces (mm_data->mesh, mm_data->interfaces, mm_data->inter_patch);
+}
+
+void MeshMatchingHandler::construct_dual_structure_and_gather_interface_elements (MMData *mm_data)
+{
+	auto mesh = mm_data->mesh;
+	auto &sheet_id_mapping = mm_data->sheet_id_mapping;
+	auto &chord_id_mapping = mm_data->chord_id_mapping;
+	//cleaning
+	mm_data->sheets.clear ();
+	mm_data->sheet_id_mapping.clear ();
+	mm_data->matched_chords.clear ();
+	mm_data->unmatched_chords.clear ();
+	mm_data->chord_id_mapping.clear ();
+	mm_data->inter_patch.clear ();
+
+	//如果六面体网格中已经存了对偶结构信息，则直接利用该信息重构对偶结构
+	if (mesh->mesh_property_exists<bool> ("dual")){
+		//创建必要的对偶结构属性
+		if (!mesh->edge_property_exists<unsigned int> ("sheetptr")){
+			warning (QObject::tr("Sheet属性不存在！"));
+			return;
+		}
+		if (!mesh->edge_property_exists<unsigned int> ("chordptr")){
+			warning (QObject::tr("Chord属性不存在！"));
+			return;
+		}
+		auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
+		auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
+
+		//首先构建sheet
+		std::vector<OvmEgH> bnd_ehs;
+		for (auto e_it = mesh->edges_begin (); e_it != mesh->edges_end (); ++e_it){
+			auto eh = *e_it;
+			//收集表面网格边，用于后面的chord重建
+			if (mesh->is_boundary (eh)) bnd_ehs.push_back (eh);
+
+			auto old_sheet_ptr = E_SHEET_PTR[eh];
+			DualSheet *sheet_of_this_eh = NULL;
+			auto locate = sheet_id_mapping.find (old_sheet_ptr);
+			if (locate != sheet_id_mapping.end ()){
+				sheet_of_this_eh = locate->second;
+				sheet_of_this_eh->ehs.insert (eh);
+				//更新E_SHEET_PTR中该边存放的sheet指针
+				E_SHEET_PTR[eh] = (unsigned int)(sheet_of_this_eh);
+
+			}else{
+				auto new_sheet = new DualSheet (mesh);
+				new_sheet->ehs.insert (eh);
+				sheet_id_mapping.insert (std::make_pair (old_sheet_ptr, new_sheet));
+				mm_data->sheets.insert (new_sheet);
+				//更新E_SHEET_PTR中该边存放的sheet指针
+				E_SHEET_PTR[eh] = (unsigned int)(new_sheet);
+				sheet_of_this_eh = new_sheet;
+			}
+			//将eh周围相邻的六面体也放入该sheet中
+			JC::get_adj_hexas_around_edge (mesh, eh, sheet_of_this_eh->chs);
+		}
+
+		//然后构建chord
+		std::vector<OvmFaH> bnd_fhs;
+		auto E_CHORD_ORDER = mesh->request_edge_property<int> ("chordorder");
+		auto element_orders_on_chords = new std::map<unsigned int, std::map<int, OvmEgH> > ();
+
+		foreach (auto eh, bnd_ehs){
+			auto old_chord_ptr = E_CHORD_PTR[eh];
+			//如果old_chord_ptr为0，则表示这条不在interface上
+			if (old_chord_ptr == 0) continue;
+			//如果old_chord_ptr不为0，则说明这条网格边在interfaces上，需要搜集起来
+			mm_data->ehs_on_interface.insert (eh);
+			(*element_orders_on_chords)[old_chord_ptr].insert (std::make_pair (E_CHORD_ORDER[eh], eh));
+		}
+
+		for (auto it = element_orders_on_chords->begin (); it != element_orders_on_chords->end (); ++it){
+			auto new_chord = new DualChord (mesh);
+			foreach (auto &p, it->second){
+				new_chord->ordered_ehs.push_back (p.second);
+				E_CHORD_PTR[p.second] = (unsigned int)new_chord;
+			}
+			//如果it->second的第一个chord order为-1的话，则表示该chord为环状chord，我们需要在它的ordered_ehs末尾重复添加第一条边
+			if (it->second.begin ()->first == -1){
+				new_chord->ordered_ehs.push_back (new_chord->ordered_ehs.front ());
+				new_chord->is_closed = true;
+			}
+			//构建chord上的四边形面集以及顺序
+			new_chord->ordered_fhs.clear ();
+			for (int i = 0; i != new_chord->ordered_ehs.size () - 1; ++i){
+				auto fh = JC::get_common_face_handle (mesh, new_chord->ordered_ehs[i], new_chord->ordered_ehs[i]);
+				if (JC::contains (new_chord->ordered_fhs, fh))
+					new_chord->is_self_int = true;
+				new_chord->ordered_fhs.push_back (fh);
+				mm_data->inter_patch.insert (fh);
+			}
+
+			chord_id_mapping[it->first] = new_chord;
+			mm_data->unmatched_chords.insert (new_chord);
+		}
+
+		delete element_orders_on_chords;
+		mesh->set_persistent (E_CHORD_ORDER, false);
+	}//end if (mesh->mesh_property_exists<bool> ("dual")){...
+	//如果六面体网格中没有对偶结构，则需要重新构建
+	else{
+		get_quads_on_interfaces (mm_data);
+		get_all_ehs_on_interface (mm_data);
+		JC::retrieve_sheets (mesh, mm_data->sheets);
+		JC::retrieve_chords (mesh, mm_data->inter_patch, mm_data->unmatched_chords);
+	}
+}
+
+bool MeshMatchingHandler::locate_interfaces ()
+{
+	logical is_touch;
+	api_entity_entity_touch (body1 (), body2 (), is_touch);
+	if (is_touch == FALSE){
+		warning (QObject::tr("两个模型没有接触面！"));
+		return false;
+	}
+	BoolOptions boolopts;
+	boolopts.set_near_coincidence_fuzz (SPAresabs * 1000);
+	api_initialize_booleans ();
+	ENTITY_LIST faces_list1, faces_list2;
+	std::vector<FACE*> faces1, faces2;
+	outcome o = api_imprint (body2 (), body1 (), &boolopts);
+	if (!o.ok ()){
+		auto str = o.get_error_info ()->error_message ();
+		warning (str);
+	}
+	api_terminate_booleans ();
+
+	//定义函数两个函数用于获得两个body之间的共享几何面
+	auto face_coincident = [&](FACE *f1, FACE *f2, double myresabs)->bool{
+		ENTITY_LIST vertices1, vertices2;
+		api_get_vertices (f1, vertices1); api_get_vertices (f2, vertices2);
+		std::vector<VERTEX*> std_vertices1, std_vertices2;
+		JC::entity_list_to_vector (vertices1, std_vertices1);
+		JC::entity_list_to_vector (vertices2, std_vertices2);
+
+		//check vertices
+		foreach (VERTEX *v1, std_vertices1){
+			auto pFuncFindCoincidentVertex = [&v1, &myresabs](const VERTEX *v2)-> bool{
+				SPAposition pos1 = v1->geometry ()->coords (),
+					pos2 = v2->geometry ()->coords();
+				return (same_point (pos1, pos2, myresabs));
+			};
+			auto locate = std::find_if (std_vertices2.begin (), std_vertices2.end (), pFuncFindCoincidentVertex);
+			if (locate != std_vertices2.end ())
+				std_vertices2.erase (locate);
+			else return false;
+		}
+
+		//check edges
+		ENTITY_LIST edges1, edges2;
+		api_get_edges (f1, edges1); api_get_edges (f2,edges2);
+		std::vector<SPAposition> mid_positions1, mid_positions2;
+		std::vector<EDGE*> std_edges1, std_edges2;
+		JC::entity_list_to_vector (edges1, std_edges1);
+		JC::entity_list_to_vector (edges2, std_edges2);
+		std::for_each (std_edges1.begin (), std_edges1.end (), [&mid_positions1](EDGE*e){mid_positions1.push_back (e->mid_pos ());});
+		std::for_each (std_edges2.begin (), std_edges2.end (), [&mid_positions2](EDGE*e){mid_positions2.push_back (e->mid_pos ());});
+		foreach (SPAposition p1, mid_positions1){
+			auto pFuncFindCoincidentPoint = [&p1, &myresabs](SPAposition p2)-> bool{
+				return (same_point (p1, p2, myresabs));
+			};
+			auto locate = std::find_if (mid_positions2.begin (), mid_positions2.end (), pFuncFindCoincidentPoint);
+			if (locate != mid_positions2.end ())
+				mid_positions2.erase (locate);
+			else
+				return false;
+		}
+		return true;
+	};
+	auto find_interface = [&](BODY *body1, BODY *body2, double myresabs)->std::vector<std::pair<FACE*, FACE*> >{
+		std::pair<FACE*, FACE*> intf_pair;
+		intf_pair.first = intf_pair.second = NULL;
+		std::vector<std::pair<FACE*, FACE*> > pairs;
+		ENTITY_LIST face_list1, face_list2;
+		api_get_faces (body1, face_list1); api_get_faces (body2, face_list2);
+		for (int i = 0; i != face_list1.count (); ++i){
+			FACE *f1 = (FACE*)face_list1[i];
+			for (int j = 0; j != face_list2.count (); ++j){
+				FACE *f2 = (FACE*)face_list2[j];
+				if (face_coincident (f1, f2, myresabs)){
+					intf_pair.first = f1; intf_pair.second = f2;
+					pairs.push_back (intf_pair);
+				}
+			}
+		}
+		return pairs;
+	};
+	auto interface_pairs = find_interface (body1(), body2(), myresabs);
+
+	mm_data1->interfaces.clear (); mm_data2->interfaces.clear ();
+	interfaces.clear ();
+	foreach (auto &p, interface_pairs){
+		mm_data1->interfaces.insert (p.first);
+		mm_data2->interfaces.insert (p.second);
+		//ENTITY *com_face = NULL;
+		//api_deep_down_copy_entity (p.first, com_face);
+		interfaces.insert (p.first);
+		//HC_Open_Segment ("/match models");{
+		//	HC_Open_Segment ("interfaces");{
+		//		HA_Set_Rendering_Options ("preserve color=off,merge faces=off");
+		//		HA_Render_Entity (com_face, ".");
+		//	}HC_Close_Segment ();
+		//}HC_Close_Segment ();
+	}
+	return true;
+}
 
 bool MeshMatchingHandler::add_two_matched_chords (DualChord *chord1, DualChord *chord2)
 {
 	if (!can_two_chords_match (chord1, chord2))
 		return false;
 	matched_chord_pairs.insert (std::make_pair (chord1, chord2));
-	unmatched_chord_set1.erase (chord1);
-	unmatched_chord_set2.erase (chord2);
+	mm_data1->add_matched_chord (chord1);
+	mm_data2->add_matched_chord (chord2);
 	adjust_matched_chords_directions ();
 	return true;
 }
 
+//bool MeshMatchingHandler::check_match ()
+//{
+//	hoopsview1->derender_mesh_groups ("mesh matching", "cannot matched chords", true);
+//	hoopsview2->derender_mesh_groups ("mesh matching", "cannot matched chords", true);
+//
+//	foreach (auto &p, matched_chord_pairs){
+//		if (!can_two_chords_match (p.first, p.second)){
+//			can_two_chords_match (p.first, p.second);
+//			MeshRenderOptions render_opts;
+//			auto group = new VolumeMeshElementGroup (p.first->mesh, "mesh matching", "cannot matched chords");
+//			JC::vector_to_unordered_set (p.first->ordered_ehs, group->ehs);
+//			render_opts.edge_color = "red";
+//			render_opts.edge_width = 12;
+//			hoopsview1->render_mesh_group (group, render_opts);
+//
+//			group = new VolumeMeshElementGroup (p.second->mesh, "mesh matching", "cannot matched chords");
+//			JC::vector_to_unordered_set (p.second->ordered_ehs, group->ehs);
+//			render_opts.edge_color = "red";
+//			render_opts.edge_width = 12;
+//			hoopsview2->render_mesh_group (group, render_opts);
+//			return false;
+//		}
+//	}
+//	return true;
+//}
+
+
+//检查能否匹配分两步：
+//1：检查interfaces的边界环上是否匹配
+//2：检查内部被已匹配的chord划分出来的区域是否能匹配
 bool MeshMatchingHandler::check_match ()
 {
-	foreach (auto &p, matched_chord_pairs){
-		if (!can_two_chords_match (p.first, p.second)){
-			can_two_chords_match (p.first, p.second);
-			return false;
+	//首先，做一些搜集工作
+	//收集所有已匹配的chord
+	std::set<DualChord*> all_matched_chords;
+	foreach (auto p, matched_chord_pairs){
+		all_matched_chords.insert (p.first);
+		all_matched_chords.insert (p.second);
+	}
+	//然后搜集所有被两条chord相交的四边形面
+	std::map<OvmFaH, std::set<DualChord*> > chord_fhs_statistics, int_fhs_mapping;
+	foreach (auto c, all_matched_chords){
+		foreach (auto quad, c->ordered_fhs)
+			chord_fhs_statistics[quad].insert (c);
+	}
+	//找出其中被两条chord共享的四边形（即相交四边形）
+	foreach (auto p, chord_fhs_statistics){
+		if (p.second.size () == 2)
+			int_fhs_mapping.insert (p);
+	}
+
+	//检查interfaces的边界环上是否匹配
+	auto E_CHORD_PTR1 = get_E_CHORD_PTR (mm_data1),
+		E_CHORD_PTR2 = get_E_CHORD_PTR (mm_data2);
+	std::map<OvmEgH, OvmEgH> matched_ehs_pairs;
+	std::map<OvmFaH, OvmFaH> matched_fhs_pairs;
+	foreach (const auto &p, mm_data1->ordered_ehs_on_edges){
+		auto geom_eg = p.first;
+		auto ordered_ehs1 = p.second;
+		auto ordered_ehs2 = mm_data2->ordered_ehs_on_edges[geom_eg];
+		std::vector<DualChord*> matched_chords_seq1, matched_chords_seq2;
+		std::vector<OvmEgH> matched_ehs_seq1, matched_ehs_seq2;
+		foreach(auto eh, ordered_ehs1){
+			auto chord = (DualChord*)(E_CHORD_PTR1[eh]);
+			if (JC::contains (all_matched_chords, chord)){
+				matched_chords_seq1.push_back (chord);
+				matched_ehs_seq1.push_back (eh);
+			}
 		}
+		foreach(auto eh, ordered_ehs2){
+			auto chord = (DualChord*)(E_CHORD_PTR2[eh]);
+			if (JC::contains (all_matched_chords, chord)){
+				matched_chords_seq2.push_back (chord);
+				matched_ehs_seq2.push_back (eh);
+			}
+		}
+		//检查matched_chords_seq1中的chord是否和matched_chords_seq2中的chord按照顺序一一匹配
+		if (matched_ehs_seq1.size () != matched_ehs_seq2.size ())
+			return false;
+		for (int i = 0; i != matched_chords_seq1.size (); ++i){
+			auto chord1 = matched_chords_seq1[i], chord2 = matched_chords_seq2[i];
+			if (get_matched_chord (chord1) != chord2)
+				return false;
+			auto bnd_eh1 = matched_ehs_seq1[i], bnd_eh2 = matched_ehs_seq2[i];
+			//同时调整这两条chord上的边的序列，使之能够一致
+			if (((chord1->ordered_ehs.front () == bnd_eh1) && (chord2->ordered_ehs.back () == bnd_eh2)) ||
+				((chord1->ordered_ehs.back () == bnd_eh1) && (chord2->ordered_ehs.front () == bnd_eh2)))
+				chord1->reverse ();
+			else
+				continue;
+		}
+	}
+
+	//经过上面检查，边界上的chord序列是匹配的，下面检查内部的chord相交关系
+	//首先定义一个函数，用于检查相交序列是否可以相匹配
+	auto fCheckIntSeq = [&] (const std::vector<std::pair<DualChord*, OvmFaH> > &int_seq1, 
+		const std::vector<std::pair<DualChord*, OvmFaH> > &int_seq2)->bool{
+		//如果两个相交序列的长度不一样，则一定不能够匹配
+		if (int_seq1.size () != int_seq2.size ())
+			return false;
+		for (int i = 0; i != int_seq1.size (); ++i){
+			auto int_chord1 = int_seq1[i].first, int_chord2 = int_seq2[i].first;
+			if ((int_chord1 == NULL && int_chord2 != NULL) || (int_chord1 != NULL && int_chord2 == NULL))
+				return false;
+			if (get_matched_chord (int_chord1) != int_chord2)
+				return false;
+			auto locate = matched_fhs_pairs.find (int_seq1[i].second);
+			if (locate != matched_fhs_pairs.end ()){
+				if (locate->second != int_seq2[i].second)
+					return false;
+			}
+		}
+		return true;
+	};
+	auto fUpdateMatchedFhsPairs = [&] (const std::vector<std::pair<DualChord*, OvmFaH> > &int_seq1, 
+		const std::vector<std::pair<DualChord*, OvmFaH> > &int_seq2){
+		for (int i = 0; i != int_seq1.size (); ++i){
+			matched_fhs_pairs.insert (std::make_pair (int_seq1[i].second, int_seq2[i].second));
+		}
+	};
+
+	//分两轮进行判断，首先进行open chord之间的匹配检测 
+	foreach (auto p, matched_chord_pairs){
+		auto chord1 = p.first;
+		auto chord2 = p.second;
+		//如果匹配的两条chord的类型不一样，则一定不能匹配
+		if (chord1->is_closed != chord2->is_closed)
+			return false;
+		//这一轮先不处理封闭chord
+		if (chord1->is_closed) continue;
+		bool is_self_int1 = false, is_self_int2 = false;
+		auto int_seq1 = get_matched_int_chord_seq (chord1, is_self_int1),
+			int_seq2 = get_matched_int_chord_seq (chord2, is_self_int2);
+		//判断两个chord是否都是自相交
+		if (is_self_int1 != is_self_int2)
+			return false;
+		if (!fCheckIntSeq (int_seq1, int_seq2))
+			return false;
+		fUpdateMatchedFhsPairs (int_seq1, int_seq2);
+	}
+	//然后分析封闭chord
+	foreach (auto p, matched_chord_pairs){
+		auto chord1 = p.first;
+		auto chord2 = p.second;
+		if (!chord1->is_closed) continue;
+		//首先调整chord上的边、面顺序，使得两个chord方向一致
+		//首先在chord上找到matched_fhs_pairs中存在的面
+		std::vector<OvmFaH> matched_fhs_on_chord1;
+
+		auto first_matched_fh_on_chord1 = InvalidFaceHandle ();
+		for (int i = 0; i != chord1->length (); ++i){
+			if (JC::contains (matched_fhs_pairs, chord1->ordered_fhs.front ())){
+				first_matched_fh_on_chord1 = chord1->ordered_fhs.front ();
+				break;
+			}else{
+				chord1->cycle ();
+			}
+		}
+
+		if (first_matched_fh_on_chord1 != InvalidFaceHandle ()){
+			auto first_matched_fh_on_chord2 = matched_fhs_pairs[first_matched_fh_on_chord1];
+			bool has_found_matched_fh = false;
+			for (int i = 0; i != chord2->length (); ++i){
+				if (chord2->ordered_fhs.front () == first_matched_fh_on_chord2){
+					has_found_matched_fh = true;
+					break;
+				}else
+					chord2->cycle ();
+			}
+			//如果找不到匹配的第一个四边形面，则这两个chord一定不能够匹配
+			if (!has_found_matched_fh)
+				return false;
+		}
+
+		//下面检查相交序列
+		bool is_self_int1 = false, is_self_int2 = false;
+		auto int_seq1 = get_matched_int_chord_seq (chord1, is_self_int1),
+			int_seq2 = get_matched_int_chord_seq (chord2, is_self_int2);
+		//判断两个chord是否都是自相交
+		if (is_self_int1 != is_self_int2)
+			return false;
+
+		//首先以当前的chord2的边面顺序进行判断一次
+		if (!fCheckIntSeq (int_seq1, int_seq2)){
+			//如果不能够匹配，还需要将chord2的边面顺序反向一下，再比较一次才能够最终确定是否能够匹配
+			chord2->cycle ();
+			chord2->reverse ();
+			int_seq2 = get_matched_int_chord_seq (chord2, is_self_int2);
+			if (!fCheckIntSeq (int_seq1, int_seq2))
+				return false;
+		}
+		fUpdateMatchedFhsPairs (int_seq1, int_seq2);
 	}
 	return true;
 }
@@ -379,47 +824,17 @@ bool MeshMatchingHandler::save_matched_chords (QString file_path)
 {
 	QFile file (file_path);
 	if (!file.open (QIODevice::WriteOnly)){
-		QMessageBox::warning (NULL, QObject::tr("错误"), QObject::tr("打开文件错误！"));
+		warning (QObject::tr("打开文件错误！"));
 		return false;
 	}
 	QDataStream out (&file);
-	//......chord pair...edges........quads.................edges........quads.......
-	QVector<QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > > converted_matched_chords_data;
+	QVector<QPair<unsigned int, unsigned int> > converted_matched_chords_data;
 	foreach (auto p, matched_chord_pairs){
-		QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > one_pair_data;
-		foreach (auto eh, p.first->ordered_ehs)
-			one_pair_data.first.first.push_back (eh.idx ());
-		foreach (auto fh, p.first->ordered_fhs)
-			one_pair_data.first.second.push_back (fh.idx ());
-
-		foreach (auto eh, p.second->ordered_ehs)
-			one_pair_data.second.first.push_back (eh.idx ());
-		foreach (auto fh, p.second->ordered_fhs)
-			one_pair_data.second.second.push_back (fh.idx ());
+		QPair<unsigned int, unsigned int> one_pair_data;
+		one_pair_data.first = (unsigned int)(p.first);
+		one_pair_data.second = (unsigned int)(p.second);
 
 		converted_matched_chords_data.push_back (one_pair_data);
-		
-		QString orig_str, now_str;
-		std::unordered_set<OvmEgH> new_ehs;
-		foreach (auto eh, p.second->ordered_ehs)
-			orig_str += QString ("a%1 ").arg (eh.idx ());
-		foreach (auto id, one_pair_data.second.first){
-			now_str += QString ("b%1 ").arg (id);
-			new_ehs.insert (OvmEgH (id));
-			if (!JC::contains (mm_data2->ehs_on_interface, OvmEgH (id))){
-				QMessageBox::information (NULL, "info", "不在ehs_on_interface中！");
-			}
-		}
-
-		QMessageBox::information (NULL, "info", orig_str + "\n" + now_str);
-		hoopsview2->derender_chord (p.second);
-
-		MeshRenderOptions render_options;
-		auto group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
-		group->ehs = new_ehs;
-		render_options.edge_color = "blue";
-		render_options.edge_width = 6;
-		hoopsview2->render_mesh_group (group, render_options);
 	}
 	out<<converted_matched_chords_data;
 	file.close ();
@@ -427,75 +842,37 @@ bool MeshMatchingHandler::save_matched_chords (QString file_path)
 	return true;
 }
 
+//从文件中加载chord匹配关系
+//匹配关系是有一对对chord序号组成，chord序号即为chord->idx的值
 bool MeshMatchingHandler::load_matched_chords (QString file_path)
 {
 	QFile file (file_path);
 	if (!file.open (QIODevice::ReadOnly)){
-		QMessageBox::warning (NULL, QObject::tr("错误"), QObject::tr("打开文件错误！"));
+		warning (QObject::tr("打开文件错误！"));
 		return false;
 	}
 	
 	QDataStream in (&file);
-	//......chord pair...edges.....quads..........edges........quads.......
-	QVector<QPair<QPair<QVector<int>,QVector<int> >, QPair<QVector<int>,QVector<int> > > > converted_matched_chords_data;
+	QVector<QPair<unsigned int, unsigned int> > converted_matched_chords_data;
 
 	in>>converted_matched_chords_data;
 	file.close ();
 
 	ChordPairs loaded_chord_pairs;
 	foreach (auto p, converted_matched_chords_data){
-		std::vector<OvmEgH> ordered_ehs1, ordered_ehs2;
-		std::vector<OvmFaH> ordered_fhs1, ordered_fhs2;
-		foreach (auto eh_idx, p.first.first)
-			ordered_ehs1.push_back (OvmEgH(eh_idx));
-		foreach (auto eh_idx, p.second.first)
-			ordered_ehs2.push_back (OvmEgH(eh_idx));
-
-		foreach (auto fh_idx, p.first.second)
-			ordered_fhs1.push_back (OvmFaH(fh_idx));
-		foreach (auto fh_idx, p.second.second)
-			ordered_fhs2.push_back (OvmFaH(fh_idx));
-
-		DualChord *chord1 = NULL, *chord2 = NULL;
-		foreach (auto chord, unmatched_chord_set1){
-			if (JC::contains (chord->ordered_ehs, ordered_ehs1.front ())){
-				chord1 = chord;
-				break;
-			}
-		}
-		foreach (auto chord, unmatched_chord_set2){
-			if (JC::contains (chord->ordered_ehs, ordered_ehs2.front ())){
-				chord2 = chord;
-				break;
-			}
-		}
-		if (chord2 == NULL){
-			if (!JC::contains (mm_data2->ehs_on_interface, ordered_ehs2.front ())){
-				QMessageBox::warning (NULL, QObject::tr("错误！"), QString("eh %1 not on_interface!").arg (ordered_ehs2.front().idx ()));
-				MeshRenderOptions render_options;
-				auto group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
-				group->ehs = mm_data2->ehs_on_interface;
-				render_options.edge_color = "blue";
-				render_options.edge_width = 6;
-				hoopsview2->render_mesh_group (group, render_options);
-
-				group = new VolumeMeshElementGroup (mm_data2->mesh, "IO", "load matched pairs");
-				group->ehs.insert (ordered_ehs2.front ());
-				render_options.edge_color = "red";
-				render_options.edge_width = 12;
-				hoopsview2->render_mesh_group (group, render_options);
-				return false;
-			}
-		}
-
-		if (chord1 == NULL || chord2 == NULL){
-			QMessageBox::warning (NULL, QObject::tr("错误！"), QObject::tr("该chord在当前模型上不存在！"));
+		if (mm_data1->chord_id_mapping.find (p.first) == mm_data1->chord_id_mapping.end ()){
+			warning (QObject::tr("该chord序号在data1的chord_id_mapping中不存在！"));
 			return false;
 		}
+		if (mm_data2->chord_id_mapping.find (p.second) == mm_data2->chord_id_mapping.end ()){
+			warning (QObject::tr("该chord序号在data2的chord_id_mapping中不存在！"));
+			return false;
+		}
+		DualChord *chord1 = mm_data1->chord_id_mapping[p.first], 
+			*chord2 = mm_data2->chord_id_mapping[p.second];
 
-		//将chord1和chord2中的边和面设置为读取进来的边、面序列
-		unmatched_chord_set1.erase (chord1);
-		unmatched_chord_set2.erase (chord2);
+		mm_data1->add_matched_chord (chord1);
+		mm_data2->add_matched_chord (chord2);
 		loaded_chord_pairs.insert (std::make_pair (chord1, chord2));
 	}
 	matched_chord_pairs.clear ();
@@ -524,10 +901,7 @@ void MeshMatchingHandler::attach_interface_entity_to_mesh (MMData *mm_data)
 		api_get_edges (f, tmp_edge_list);
 		for (int i = 0; i != tmp_edge_list.count (); ++i){
 			auto eg = tmp_edge_list[i];
-			if (perip_edges_buff.find (eg) == perip_edges_buff.end ())
-				perip_edges_buff.insert (eg);
-			else
-				perip_edges_buff.erase (eg);
+			perip_edges_buff.insert (eg);
 		}
 	}
 
@@ -536,11 +910,11 @@ void MeshMatchingHandler::attach_interface_entity_to_mesh (MMData *mm_data)
 	
 	VolumeMesh *mesh = mm_data->mesh;
 	std::map<EDGE*, std::unordered_set<OvmEgH> > ehs_on_edges;
-	if (!mesh->edge_property_exists<unsigned long> ("intedgeptr")){
-		auto tmp = mesh->request_edge_property<unsigned long> ("intedgeptr", 0);
+	if (!mesh->edge_property_exists<unsigned int> ("intedgeptr")){
+		auto tmp = mesh->request_edge_property<unsigned int> ("intedgeptr", 0);
 		mesh->set_persistent (tmp);
 	}
-	auto E_INT_EG_PTR = mesh->request_edge_property<unsigned long> ("intedgeptr");
+	auto E_INT_EG_PTR = mesh->request_edge_property<unsigned int> ("intedgeptr");
 
 	foreach (auto &eh, mm_data->ehs_on_interface){
 		EDGE *on_which_eg = NULL;
@@ -553,7 +927,7 @@ void MeshMatchingHandler::attach_interface_entity_to_mesh (MMData *mm_data)
 			api_entity_point_distance(perip_edges_list[i], POS2SPA(vh2), closest_pos, dist2);
 			if (dist1 < myresabs && dist2 < myresabs){
 				on_which_eg = (EDGE *)(perip_edges_list[i]);
-				E_INT_EG_PTR[eh] = (unsigned long)on_which_eg;
+				E_INT_EG_PTR[eh] = (unsigned int)on_which_eg;
 				break;
 			}
 		}
@@ -566,12 +940,47 @@ void MeshMatchingHandler::attach_interface_entity_to_mesh (MMData *mm_data)
 		auto &ordered_ehs = mm_data->ordered_ehs_on_edges[eg];
 		auto ssss = ehs_on_edges[eg];
 		get_ordered_ehs_on_edge (mesh, ehs_on_edges[eg], eg, ordered_ehs);
-		ordered_ehs = ordered_ehs;
 	}
 }
 
 void MeshMatchingHandler::init_match ()
 {
+	//hoopsview1->derender_mesh_groups ("tmp", "ordered ehs");
+	//foreach (auto p, mm_data1->ordered_ehs_on_edges){
+	//	
+	//	auto group = new VolumeMeshElementGroup (mesh1(), "tmp", "ordered ehs");
+	//	group->ehs.insert (p.second.front ());
+
+	//	MeshRenderOptions render_options;
+	//	render_options.edge_color = "red";
+	//	render_options.edge_width = 12;
+	//	hoopsview1->render_mesh_group (group, render_options);
+
+	//	group = new VolumeMeshElementGroup (mesh1(), "tmp", "ordered ehs");
+	//	group->ehs.insert (p.second[1]);
+
+	//	render_options.edge_color = "blue";
+	//	hoopsview1->render_mesh_group (group, render_options);
+	//}
+	//hoopsview2->derender_mesh_groups ("tmp", "ordered ehs");
+	//foreach (auto p, mm_data2->ordered_ehs_on_edges){
+	//	
+	//	auto group = new VolumeMeshElementGroup (mesh2(), "tmp", "ordered ehs");
+	//	group->ehs.insert (p.second.front ());
+
+	//	MeshRenderOptions render_options;
+	//	render_options.edge_color = "red";
+	//	render_options.edge_width = 12;
+	//	hoopsview2->render_mesh_group (group, render_options);
+
+	//	group = new VolumeMeshElementGroup (mesh2(), "tmp", "ordered ehs");
+	//	group->ehs.insert (p.second[1]);
+
+	//	render_options.edge_color = "blue";
+	//	hoopsview2->render_mesh_group (group, render_options);
+	//}
+	//return;
+
 	struct ChordPairCandidate{
 		DualChord *chord1, *chord2;
 		double dist;
@@ -585,8 +994,8 @@ void MeshMatchingHandler::init_match ()
 	//根据两个chord的起始边、围成的多边形来初步判断他们能否匹配
 	//将能匹配的放入candidates数组
 	std::set<ChordPairCandidate> cpcs;
-	foreach (auto &chord1, unmatched_chord_set1){
-		foreach (auto &chord2, unmatched_chord_set2){
+	foreach (auto &chord1, mm_data1->unmatched_chords){
+		foreach (auto &chord2, mm_data2->unmatched_chords){
 			if (can_two_chords_match (chord1, chord2)){
 				auto polyline1 = get_chord_spa_polyline (chord1),
 					polyline2 = get_chord_spa_polyline (chord2);
@@ -626,14 +1035,14 @@ void MeshMatchingHandler::init_match ()
 					it = cpcs.erase (it);
 				else it++;
 			}
-			unmatched_chord_set1.erase (test_chord_pair.first);
-			unmatched_chord_set2.erase (test_chord_pair.second);
+			mm_data1->add_matched_chord (test_chord_pair.first);
+			mm_data2->add_matched_chord (test_chord_pair.second);
 		}else{
 			matched_chord_pairs.erase (test_chord_pair);
 		}
 	}
 
-	adjust_matched_chords_directions ();
+	//adjust_matched_chords_directions ();
 }
 
 void MeshMatchingHandler::adjust_matched_chords_directions ()
@@ -682,40 +1091,20 @@ void MeshMatchingHandler::adjust_matched_chords_directions ()
 	}
 }
 
-std::vector<DualChord*> MeshMatchingHandler::get_intersect_seq (DualChord *chord, bool &self_int)
+std::vector<std::pair<DualChord*,OvmFaH> > MeshMatchingHandler::get_matched_int_chord_seq (DualChord *chord, bool &self_int)
 {
-	std::vector<DualChord*> int_seq;
-	ChordPairs reversed_matched_chord_pairs;
-	foreach (auto &p, matched_chord_pairs)
-		reversed_matched_chord_pairs.insert (std::make_pair (p.second, p.first));
-	self_int = false;
+	std::vector<std::pair<DualChord*,OvmFaH> > int_seq;
 
-	auto fGetIntSeq = [&] (VolumeMesh *mesh, ChordPairs & cp, std::vector<DualChord*> &is){
-		auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
-		foreach (auto &fh, chord->ordered_fhs){
-			auto heh_vec = mesh->face (fh).halfedges ();
-			std::set<DualChord*> chords;
-			foreach (auto &heh, heh_vec){
-				auto eh = mesh->edge_handle (heh);
-				DualChord *tmp_chord = (DualChord*)(E_CHORD_PTR[eh]);
-				assert (tmp_chord);
-				chords.insert (tmp_chord);
-			}
-			assert (chords.size () <= 2);
-			if (chords.size () == 1){
-				is.push_back (NULL);
-				self_int = true;
-			}else if (chords.size () == 2){
-				chords.erase (chord);
-				is.push_back (*(chords.begin ()));
-			}else
-				assert (false);
+	foreach (auto fh, chord->ordered_fhs){
+		auto int_chord = get_int_chord_at_this_fh (chord, fh);
+		//如果int_chord为NULL，说明chord为自相交chord
+		if (int_chord == NULL){
+			self_int = true;
+			int_seq.push_back (std::make_pair (int_chord, fh));
+		}else if (has_been_matched (int_chord)){
+			int_seq.push_back (std::make_pair (int_chord, fh));
 		}
-	};
-	if (chord->mesh == mm_data1->mesh)
-		fGetIntSeq (mm_data1->mesh, matched_chord_pairs, int_seq);
-	else
-		fGetIntSeq (mm_data2->mesh, reversed_matched_chord_pairs, int_seq);
+	}
 	return int_seq;
 }
 
@@ -727,7 +1116,7 @@ std::pair<std::set<OvmVeH>, std::set<OvmVeH> > MeshMatchingHandler::get_candidat
 	auto ordered_ehs_on_start_geom_eg = mm_data->ordered_ehs_on_edges[translated_cpd.start_edge],
 		ordered_ehs_on_end_geom_eg = mm_data->ordered_ehs_on_edges[translated_cpd.end_edge];
 
-	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+	auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
 
 	auto fGetCandidateVertices = [&] (std::vector<OvmEgH> &ordered_ehs_on_geom_eg, int interval_idx_want)->std::set<OvmVeH>{
 		std::set<OvmVeH> candi_vers;
@@ -760,28 +1149,47 @@ std::vector<std::set<OvmEgH> > MeshMatchingHandler::get_candidate_interval_ehs (
 	std::vector<std::set<OvmEgH> > candidate_interval_ehs;
 	for (int i = 0; i != translated_cpd.inter_graph.size (); ++i){
 		auto int_chord = translated_cpd.inter_graph[i];
-		auto interval_idx_want = translated_cpd.inter_graph_indices[i];
-		int cur_interval_idx = 0;
-
 		std::set<OvmEgH> cur_candi_int_ehs;
-		if (interval_idx_want == 0)
-			cur_candi_int_ehs.insert (int_chord->ordered_ehs.front ());
+		//如果int_chord是NULL，则chord为自相交chord，此处该相交chord上的可选边为空
+		if (int_chord != NULL){
+			auto interval_idx_want = translated_cpd.inter_graph_indices[i];
+			int cur_interval_idx = 0;
 
-		for (int i = 1; i != int_chord->ordered_ehs.size (); ++i){
-			auto fh_on_int_chord = int_chord->ordered_fhs[i - 1];
-			auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
-			if (has_been_matched (int_chord_on_int_chord))
-				cur_interval_idx++;
-			if (cur_interval_idx == interval_idx_want)
-				cur_candi_int_ehs.insert (int_chord->ordered_ehs[i]);
-			if (cur_interval_idx > interval_idx_want)
-				break;
+			if (interval_idx_want == 0)
+				cur_candi_int_ehs.insert (int_chord->ordered_ehs.front ());
+
+			for (int i = 1; i != int_chord->ordered_ehs.size (); ++i){
+				auto fh_on_int_chord = int_chord->ordered_fhs[i - 1];
+				auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
+				if (has_been_matched (int_chord_on_int_chord))
+					cur_interval_idx++;
+				if (cur_interval_idx == interval_idx_want)
+					cur_candi_int_ehs.insert (int_chord->ordered_ehs[i]);
+				if (cur_interval_idx > interval_idx_want)
+					break;
+			}
 		}
 
 		candidate_interval_ehs.push_back (cur_candi_int_ehs);
 	}
 
 	return candidate_interval_ehs;
+}
+
+std::vector<OvmEgH> MeshMatchingHandler::get_polyline_for_chord_inflation (VolumeMesh *mesh, std::pair<std::set<OvmVeH>, 
+	std::set<OvmVeH> > vhs_on_geom_egs,
+	std::vector<std::set<OvmEgH> > candi_interval_ehs)
+{
+	std::vector<OvmEgH> polyline;
+	auto start_geom_vhs = vhs_on_geom_egs.first;
+	auto end_geom_vhs = vhs_on_geom_egs.second;
+
+	foreach (auto start_vh, start_geom_vhs){
+		foreach (auto end_vh, end_geom_vhs){
+
+		}
+	}
+	return polyline;
 }
 
 bool MeshMatchingHandler::can_two_chords_match (DualChord *chord1, DualChord *chord2)
@@ -851,7 +1259,13 @@ ChordPosDesc MeshMatchingHandler::get_chord_pos_desc (DualChord *chord)
 	VolumeMesh *mesh = chord->mesh;
 	get_inter_graph (cpd, chord);
 	if (!chord->is_closed){
-		get_edge_graph (cpd);
+		auto E_INT_EG_PTR = get_E_INT_EG_PTR (get_mesh_matching_data (mesh));
+		auto start_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.front ()]);
+		auto end_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.back ()]);
+		auto geom_indices = get_matched_index_on_geom_edge (chord, start_eg, end_eg);
+		cpd.start_edge = start_eg;
+		cpd.end_edge = end_eg;
+		cpd.start_idx = geom_indices.first; cpd.end_idx = geom_indices.second;
 	}
 	return cpd;
 }
@@ -861,24 +1275,6 @@ void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 	VolumeMesh *mesh = chord->mesh;
 	cpd.inter_graph.clear ();
 	cpd.inter_graph_indices.clear ();
-	auto E_INT_EG_PTR = mesh->request_edge_property<unsigned long> ("intedgeptr");
-
-	//auto start_asso_eg = JC::get_associated_geometry_edge_of_boundary_eh (mesh, chord->ordered_ehs.front ());
-	//auto end_asso_eg = JC::get_associated_geometry_edge_of_boundary_eh (mesh, chord->ordered_ehs.back ());
-	auto start_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.front ()]);
-	auto end_asso_eg = (EDGE*)(E_INT_EG_PTR[chord->ordered_ehs.back ()]);
-
-	//调整start edge和end edge，是的在cpd中，start edge的值比end edge的值要小，这样便于后面的一些判断操作
-	cpd.start_edge = start_asso_eg < end_asso_eg? start_asso_eg : end_asso_eg;
-	cpd.end_edge = start_asso_eg < end_asso_eg? end_asso_eg : start_asso_eg;
-
-	//如果chord中的ehs的顺序和cpd的start和end顺序相反，并且start和end edge不是同一条几何边
-	//那么就将ehs的顺序反向
-	if (start_asso_eg != end_asso_eg && start_asso_eg == cpd.end_edge){
-		std::reverse (chord->ordered_ehs.begin (), chord->ordered_ehs.end ());
-		std::reverse (chord->ordered_fhs.begin (), chord->ordered_fhs.end ());
-	}
-	//如果start和end edge是同一条几何边，那么ehs的顺序在后面的get_edge_graph中进行调整
 
 	auto ordered_fhs = chord->ordered_fhs;
 	foreach (auto &fh, ordered_fhs){
@@ -887,6 +1283,7 @@ void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 		if (int_chord == NULL){
 			cpd.inter_graph.push_back (NULL);
 			cpd.self_intersecting = true;
+			cpd.inter_graph_indices.push_back (-1);
 		}else{
 			//如果相交的chord当前并不在已匹配chord列表中时，则忽略
 			if (!has_been_matched (int_chord))
@@ -895,12 +1292,11 @@ void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 			//下面要求得在int_chord上，当前chord和它相交于第几段
 			int int_idx = 0;
 			foreach (auto fh_on_int_chord, int_chord->ordered_fhs){
-				auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
-				if (int_chord_on_int_chord == NULL)
-					int_idx++;
 				if (fh_on_int_chord == fh)
 					break;
-				if (has_been_matched (int_chord_on_int_chord))
+				auto int_chord_on_int_chord = get_int_chord_at_this_fh (int_chord, fh_on_int_chord);
+
+				if (int_chord_on_int_chord == NULL || has_been_matched (int_chord_on_int_chord))
 					int_idx++;
 			}
 			cpd.inter_graph_indices.push_back (int_idx);
@@ -911,7 +1307,7 @@ void MeshMatchingHandler::get_inter_graph (ChordPosDesc &cpd, DualChord *chord)
 DualChord * MeshMatchingHandler::get_int_chord_at_this_fh (DualChord *chord, OvmFaH fh)
 {
 	auto mesh = chord->mesh;
-	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
+	auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
 
 	auto heh_vec = mesh->face (fh).halfedges ();
 	std::set<DualChord*> chords;
@@ -932,53 +1328,29 @@ DualChord * MeshMatchingHandler::get_int_chord_at_this_fh (DualChord *chord, Ovm
 	}
 }
 
-void MeshMatchingHandler::get_edge_graph (ChordPosDesc &cpd)
+std::pair<int, int> MeshMatchingHandler::get_matched_index_on_geom_edge (DualChord *chord, EDGE *start_eg, EDGE *end_eg)
 {
-	DualChord *chord = cpd.chord;
 	VolumeMesh *mesh = chord->mesh;
 	MMData *mm_data = get_mesh_matching_data (mesh);
+	std::pair<int, int> matched_geom_indices;
 	
-	auto E_CHORD_PTR = mesh->request_edge_property<unsigned long> ("chordptr");
-	auto fGetOrderedPos = [&] (std::vector<OvmEgH> &ordered_ehs, std::vector<DualChord*> &ordered_chords, EDGE *eg){
+	auto E_CHORD_PTR = mesh->request_edge_property<unsigned int> ("chordptr");
+	auto fGetGeomEdgeMatchedIndex = [&] (EDGE *eg, OvmEgH eh_on_chord)->int{
 		std::vector<OvmEgH> &all_ordered_ehs = mm_data->ordered_ehs_on_edges[eg];
+		int idx = 0;
 		foreach (auto &eh, all_ordered_ehs){
+			if (eh == eh_on_chord) break;
 			DualChord *chord_on_eh = (DualChord*)(E_CHORD_PTR[eh]);
-			if (has_been_matched (chord_on_eh) || chord_on_eh == chord){
-				ordered_chords.push_back (chord_on_eh);
-				ordered_ehs.push_back (eh);
+			if (has_been_matched (chord_on_eh)){
+				idx++;
 			}
 		}
-	};
-	auto fGetIndex = [&] (std::vector<OvmEgH> &ordered_ehs, OvmEgH eh)->int{
-		for (int i = 0; i != ordered_ehs.size (); ++i){
-			if (ordered_ehs[i] == eh) return i;
-		}
-		return -1;
+		return idx;
 	};
 
-	//如果起始边和终止边在不同的几何边上，则需要获得两个序列
-	if (cpd.start_edge != cpd.end_edge){
-		fGetOrderedPos (cpd.start_edge_ordered_ehs, cpd.start_edge_graph, cpd.start_edge);
-		fGetOrderedPos (cpd.end_edge_ordered_ehs, cpd.end_edge_graph, cpd.end_edge);
-		cpd.start_idx = fGetIndex (cpd.start_edge_ordered_ehs, chord->ordered_ehs.front ());
-		assert (cpd.start_idx != -1);
-		cpd.end_idx = fGetIndex (cpd.end_edge_ordered_ehs, chord->ordered_ehs.back ());
-		assert (cpd.end_idx != -1);
-	}
-	//如果起始边和终止边相同，只需要获得一个序列
-	else{
-		fGetOrderedPos (cpd.start_edge_ordered_ehs, cpd.start_edge_graph, cpd.start_edge);
-		int start_idx = fGetIndex (cpd.start_edge_ordered_ehs, chord->ordered_ehs.front ()),
-			end_idx = fGetIndex (cpd.start_edge_ordered_ehs, chord->ordered_ehs.back ());
-		//如果起始边在该边上的序号比终止边大，那么就反转该chord的ehs
-		if (start_idx > end_idx){
-			std::reverse (chord->ordered_ehs.begin (), chord->ordered_ehs.end ());
-			std::reverse (chord->ordered_fhs.begin (), chord->ordered_fhs.end ());
-			std::reverse (cpd.inter_graph.begin (), cpd.inter_graph.end ());
-			qSwap (start_idx, end_idx);
-		}
-		cpd.start_idx = start_idx; cpd.end_idx = end_idx;
-	}
+	matched_geom_indices.first = fGetGeomEdgeMatchedIndex (start_eg, chord->ordered_ehs.front ());
+	matched_geom_indices.second = fGetGeomEdgeMatchedIndex (end_eg, chord->ordered_ehs.back ());
+	return matched_geom_indices;
 }
 
 void MeshMatchingHandler::get_ordered_ehs_on_edge (VolumeMesh *mesh, std::unordered_set<OvmEgH> &ehs_on_eg, 
@@ -1077,7 +1449,7 @@ DualChord *MeshMatchingHandler::get_matched_chord (DualChord *chord)
 //	DualChord *chord = in_cpd.chord;
 //	VolumeMesh *chord_mesh = chord->mesh;
 //	VolumeMesh *other_mesh = chord_mesh == mm_data1->mesh? mm_data2->mesh : mm_data1->mesh;
-//	auto E_CHORD_PTR = other_mesh->request_edge_property<unsigned long> ("chordptr");
+//	auto E_CHORD_PTR = other_mesh->request_edge_property<unsigned int> ("chordptr");
 //	MMData *chord_mm_data = chord_mesh == mm_data1->mesh? mm_data1 : mm_data2;
 //	MMData *other_mm_data = chord_mesh == mm_data1->mesh? mm_data2 : mm_data1;
 //

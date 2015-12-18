@@ -35,7 +35,7 @@ void MeshEditController::on_select_face_ok_for_cc ()
 
 	auto tmp_selected_fhs = selected_fhs;
 	selected_sheets.clear ();
-	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 
 	while (!tmp_selected_fhs.empty ()){
 		auto seed_fh = JC::pop_begin_element (tmp_selected_fhs);
@@ -117,7 +117,7 @@ void MeshEditController::on_select_edges_ok_for_cc ()
 	hoopsview->clear_selection ();
 	hoopsview->begin_camera_manipulate ();
 
-	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 	selected_sheets.clear ();
 
 	auto fGetAllEdges = [&] (std::unordered_set<OvmCeH> &chs, std::unordered_set<OvmEgH> &ehs){
@@ -320,7 +320,7 @@ void MeshEditController::on_columns_collapse_for_cc ()
 	JC::smooth_volume_mesh (mesh, body, 5);
 	update_mesh ();
 
-	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 	SheetSet sheet_set;
 	JC::retrieve_sheets (mesh, sheet_set);
 

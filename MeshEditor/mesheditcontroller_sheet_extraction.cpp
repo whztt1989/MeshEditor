@@ -33,7 +33,7 @@ void MeshEditController::on_select_edges_for_se ()
 //	SheetSet sheet_set;
 //	JC::retrieve_sheets (mesh, sheet_set);
 //
-//	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+//	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 //	auto selected_eh = selected_ehs.front ();
 //	DualSheet *sheet = (DualSheet*)(E_SHEET_PTR[selected_eh]);
 //	assert (sheet);
@@ -204,7 +204,7 @@ void MeshEditController::on_select_edges_ok_for_se ()
 	SheetSet sheet_set;
 	JC::retrieve_sheets (mesh, sheet_set);
 
-	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 	QStringList slist;
 	slist<<"red"
 		<<"green"
@@ -288,5 +288,5 @@ void MeshEditController::on_postprocess_for_se ()
 		delete ossi_handler;
 		ossi_handler = NULL;
 	}
-	emit new_sheet_inflated((unsigned long)new_sheet);
+	emit new_sheet_inflated((unsigned int)new_sheet);
 }

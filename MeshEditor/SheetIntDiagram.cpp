@@ -72,8 +72,8 @@ SheetIntDiagram *get_sheet_int_diagram (VolumeMesh *mesh, DualSheet *sheet)
 	sheet_int_diagram->add_property (OM_V_FH, "facehandle");
 	sheet_int_diagram->add_property (OM_E_SHEET_PTR, "sheetptr");
 
-	assert (mesh->edge_property_exists<unsigned long> ("sheetptr"));
-	auto OVM_E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	assert (mesh->edge_property_exists<unsigned int> ("sheetptr"));
+	auto OVM_E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 
 	auto sheet_ehs = sheet->ehs;
 	//collect inside halfedges with the same direction
@@ -232,8 +232,8 @@ SheetIntDiagram *get_quad_set_int_diagram (VolumeMesh *mesh, std::unordered_set<
 	sheet_int_diagram->add_property (OM_V_FH, "facehandle");
 	sheet_int_diagram->add_property (OM_E_SHEET_PTR, "sheetptr");
 
-	assert (mesh->edge_property_exists<unsigned long> ("sheetptr"));
-	auto OVM_E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	assert (mesh->edge_property_exists<unsigned int> ("sheetptr"));
+	auto OVM_E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 
 	//获得qs上的所有网格边
 	std::unordered_set<OvmEgH> all_ehs_in_qs;

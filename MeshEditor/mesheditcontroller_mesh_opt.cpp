@@ -28,12 +28,12 @@ void MeshEditController::on_init_move_node_for_mo ()
 		mesh->set_persistent(tmp);
 	}
 	auto V_FIXED = mesh->request_vertex_property<bool> ("vertexfixedforsmooth");
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 	for (auto v_it = mesh->vertices_begin (); v_it != mesh->vertices_end (); ++v_it){
 		if (!mesh->is_boundary (*v_it)) continue;
 		auto entity = (ENTITY*)(V_ENTITY_PTR[*v_it]);
 		if (entity == NULL) continue;
-		if ((unsigned long)entity == -1) continue;
+		if ((unsigned int)entity == -1) continue;
 		if (is_FACE (entity)){
 			V_FIXED[*v_it] = false;
 		}
@@ -42,8 +42,8 @@ void MeshEditController::on_init_move_node_for_mo ()
 
 void MeshEditController::on_select_node_for_move_for_mo ()
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 	if (!mesh->vertex_property_exists<bool> ("vertexfixedforsmooth")){
 		auto tmp = mesh->request_vertex_property<bool> ("vertexfixedforsmooth", false);
 		mesh->set_persistent(tmp);
@@ -55,7 +55,7 @@ void MeshEditController::on_select_node_for_move_for_mo ()
 		if (!mesh->is_boundary (*v_it)) continue;
 		auto entity = (ENTITY*)(V_ENTITY_PTR[*v_it]);
 		if (entity == NULL) continue;
-		if ((unsigned long)entity == -1) continue;
+		if ((unsigned int)entity == -1) continue;
 		if (is_FACE (entity)){
 			if (V_FIXED[*v_it])
 				vhs_fixed.insert (*v_it);
@@ -95,8 +95,8 @@ void MeshEditController::on_cancel_select_node_for_move_for_mo ()
 
 void MeshEditController::on_move_node_for_mo ()
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	selected_vhs.clear ();
 	if (!hoopsview->get_selected_elements (&selected_vhs, NULL, NULL)){
@@ -122,8 +122,8 @@ void MeshEditController::on_move_node_ok_for_mo ()
 
 void MeshEditController::on_select_node_pair_for_mo ()
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 	
 	std::unordered_set<OvmVeH> vhs_not_on_geom_vertices;
 	std::hash_map<ENTITY*, OvmVeH> geom_mapping;
@@ -131,7 +131,7 @@ void MeshEditController::on_select_node_pair_for_mo ()
 		if (!mesh->is_boundary (*v_it)) continue;
 		auto entity = (ENTITY*)(V_ENTITY_PTR[*v_it]);
 		if (entity == NULL) continue;
-		if ((unsigned long)entity == -1) continue;
+		if ((unsigned int)entity == -1) continue;
 		if (!is_VERTEX (entity))
 			vhs_not_on_geom_vertices.insert (*v_it);
 		else
@@ -167,8 +167,8 @@ void MeshEditController::on_select_node_pair_for_mo ()
 
 void MeshEditController::on_pair_node_ok_for_mo ()
 {
-	if (!mesh->vertex_property_exists<unsigned long> ("entityptr")) return;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	if (!mesh->vertex_property_exists<unsigned int> ("entityptr")) return;
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	selected_vhs.clear ();
 	if (!hoopsview->get_selected_elements (&selected_vhs, NULL, NULL)){
@@ -228,7 +228,7 @@ void MeshEditController::on_pair_node_ok_for_mo ()
 			QMessageBox::warning (this, "错误", "该节点找不到几何点！");
 			return;
 		}
-		V_ENTITY_PTR[vh] = (unsigned long)closest_vt;
+		V_ENTITY_PTR[vh] = (unsigned int)closest_vt;
 		unmatched_vertices.erase (closest_vt);
 		mesh->set_vertex (vh, closest_pos);
 	}

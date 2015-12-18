@@ -16,7 +16,7 @@ void MeshEditWidget::on_select_sheet_for_lse ()
 	}
 	JC::retrieve_sheets (mesh, sheet_set);
 	OvmEgH eh = selected_ehs.front ();
-	auto E_SHEET_PTR = mesh->request_edge_property<unsigned long> ("sheetptr");
+	auto E_SHEET_PTR = mesh->request_edge_property<unsigned int> ("sheetptr");
 	DualSheet *sheet = (DualSheet*)(E_SHEET_PTR[eh]);
 	osse_handler->set_sheet_to_extract (sheet);
 	MeshRenderOptions render_options;
@@ -32,7 +32,7 @@ void MeshEditWidget::on_select_interface_faces_for_lse ()
 		return;
 	}
 	FACE *interface_face = NULL;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	foreach (auto &fh, selected_fhs){
 		auto adj_vhs = JC::get_adj_vertices_around_face (mesh, fh);
@@ -61,7 +61,7 @@ void MeshEditWidget::on_select_constant_faces_for_lse ()
 		return;
 	}
 	FACE *constant_face = NULL;
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	foreach (auto &fh, selected_fhs){
 		auto adj_vhs = JC::get_adj_vertices_around_face (mesh, fh);

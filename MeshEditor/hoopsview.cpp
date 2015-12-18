@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -76,7 +76,7 @@ extern HDB * m_pHDB;
 #define Debug_USE_QGL_CONTEXT           0x00000080
 
 HoopsView::HoopsView(QWidget* parent) 
-    : HQWidget(parent)
+	: HQWidget(parent)
 { 
 
 
@@ -353,33 +353,33 @@ void HoopsView::OnOrbit()
 void HoopsView::OnZoom() 
 {
 	if (m_pHView->GetCurrentOperator())
-	    delete m_pHView->GetCurrentOperator();
+		delete m_pHView->GetCurrentOperator();
 
-    m_pHView->SetCurrentOperator(new HOpCameraZoom(m_pHView));
+	m_pHView->SetCurrentOperator(new HOpCameraZoom(m_pHView));
 }
 
 // window zoomer
 void HoopsView::OnZoomToWindow() 
 {
 	if (m_pHView->GetCurrentOperator())
-	    delete m_pHView->GetCurrentOperator();
+		delete m_pHView->GetCurrentOperator();
 
-    m_pHView->SetCurrentOperator(new HOpCameraZoomBox(m_pHView));
+	m_pHView->SetCurrentOperator(new HOpCameraZoomBox(m_pHView));
 }
 
 // resets the camera to view the world space extents of the model
 void HoopsView::OnZoomToExtents() 
 {
-    m_pHView->ZoomToExtents();
+	m_pHView->ZoomToExtents();
 }
   
 // panner
 void HoopsView::OnPan() 
 {
 
-    if (m_pHView->GetCurrentOperator())
-	    delete m_pHView->GetCurrentOperator();
-    m_pHView->SetCurrentOperator(new HOpCameraPan(m_pHView));		
+	if (m_pHView->GetCurrentOperator())
+		delete m_pHView->GetCurrentOperator();
+	m_pHView->SetCurrentOperator(new HOpCameraPan(m_pHView));		
 
 }
  
@@ -1222,12 +1222,12 @@ void HoopsView::move_vertices_ok (BODY *body)
 	}
 	auto V_FIXED = mesh->request_vertex_property<bool> ("vertexfixedforsmooth");
 
-	assert (mesh->vertex_property_exists<unsigned long> ("entityptr"));
-	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long>("entityptr");
+	assert (mesh->vertex_property_exists<unsigned int> ("entityptr"));
+	auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int>("entityptr");
 
 	auto move_handle = dynamic_cast<HOpMoveHandle*>(m_pHView->GetOperator ());
 	if (move_handle == NULL){
-		QMessageBox::warning (NULL, "¾¯¸æ", "µ±Ç°µÄ²Ù×÷²»ÊÇÒÆ¶¯²Ù×÷£¡");
+		QMessageBox::warning (NULL, "è­¦å‘Š", "å½“å‰çš„æ“ä½œä¸æ˜¯ç§»åŠ¨æ“ä½œï¼");
 		return;
 	}
 
@@ -1272,7 +1272,7 @@ void HoopsView::move_vertices_ok (BODY *body)
 			}
 		}
 		mesh->set_vertex (Ni, SPA2POS(curr_closest_pos));
-		V_ENTITY_PTR[Ni] = (unsigned long)(curr_closest_f);
+		V_ENTITY_PTR[Ni] = (unsigned int)(curr_closest_f);
 	}
 
 	delete[] points;
@@ -1391,4 +1391,45 @@ void HoopsView::set_acis_faces_selectable (bool selectable)
 	}HC_Close_Segment ();
 	m_pHView->Update ();
 	//m_pHView->GetModel ()->
+}
+
+void HoopsView::render_one_acis_edge (EDGE *eg)
+{
+	HC_KEY old_key = INVALID_KEY;
+	HC_KEY new_key = POINTER_TO_KEY (eg);
+	if (segment_existing (new_key))
+		return;
+	HC_Open_Segment_By_Key (m_pHView->GetModelKey ());{
+		old_key = HC_Open_Segment ("");{
+			HC_Set_Visibility ("lines=on");
+			HC_Set_Line_Weight (3);
+			HC_Set_Color ("lines=red");
+			HC_KEY geom_key[1];
+			HA_Compute_Geometry_Keys (eg, 1, geom_key);
+			HC_Reference_Geometry_By_Key (geom_key[0]);
+		}HC_Close_Segment ();
+	}HC_Close_Segment ();
+	HC_Renumber_Key (old_key, new_key, "global");
+	m_pHView->Update ();
+}
+
+void HoopsView::derender_one_acis_edge (EDGE *eg)
+{
+	HC_KEY eg_key = POINTER_TO_KEY (eg);
+	if (!segment_existing (eg_key))
+		return;
+	HC_Delete_By_Key (eg_key);
+	m_pHView->Update ();
+}
+
+void HoopsView::render_acis_edges (std::set<EDGE*> egs)
+{
+	foreach (auto eg, egs)
+		render_one_acis_edge (eg);
+}
+
+void HoopsView::derender_acis_edges (std::set<EDGE*> egs)
+{
+	foreach (auto eg, egs)
+		derender_one_acis_edge (eg);
 }

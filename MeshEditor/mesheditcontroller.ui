@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>124</width>
+        <height>234</height>
        </rect>
       </property>
       <attribute name="label">
@@ -214,8 +214,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>132</width>
+        <height>402</height>
        </rect>
       </property>
       <attribute name="label">
@@ -430,8 +430,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>98</width>
+        <height>163</height>
        </rect>
       </property>
       <attribute name="label">
@@ -508,8 +508,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>108</width>
+        <height>340</height>
        </rect>
       </property>
       <attribute name="label">
@@ -748,7 +748,7 @@
       <attribute name="label">
        <string>Chord操作</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_14">
+      <layout class="QVBoxLayout" name="verticalLayout_16">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -842,6 +842,61 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>调整环形chord方向</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="pb_Select_Edge_For_Adjust_Chord">
+            <property name="text">
+             <string>选择边</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="pb_Select_As_1st_Edge_For_Chord">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>第一条边</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_Select_As_2nd_Edge_For_Chord">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>第二条边</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pb_Show_Chord_Info_For_CO">
          <property name="text">
           <string>显示chord信息</string>
@@ -875,8 +930,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>126</width>
+        <height>224</height>
        </rect>
       </property>
       <attribute name="label">
@@ -1175,8 +1230,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>147</width>
-        <height>433</height>
+        <width>110</width>
+        <height>192</height>
        </rect>
       </property>
       <attribute name="label">

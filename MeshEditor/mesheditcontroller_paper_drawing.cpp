@@ -106,7 +106,7 @@ void MeshEditController::on_show_interface_patches_for_pd ()
 	hoopsview->show_mesh_faces (false);
 
 	//std::unordered_set<OvmFaH> interface_fhs;
-	//auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned long> ("entityptr");
+	//auto V_ENTITY_PTR = mesh->request_vertex_property<unsigned int> ("entityptr");
 
 	//for (auto bf_it = mesh->bf_iter (); bf_it; ++bf_it){
 	//	auto vhs_on_fh = JC::get_adj_vertices_around_face (mesh, *bf_it);
