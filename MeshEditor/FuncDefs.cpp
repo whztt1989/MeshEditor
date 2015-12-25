@@ -984,6 +984,47 @@ namespace JC{
 		return std::abs(val1 + 1 - 3) + std::abs(val2 + 1 - 3);
 	}
 
+	int vertex_valence_change (VolumeMesh *mesh, OvmVeH vh, OvmVeH prev_vh, OvmVeH next_vh)
+	{
+		int val = 0;
+		auto prev_eh = mesh->edge_handle (mesh->halfedge (prev_vh, vh));
+		auto next_eh = mesh->edge_handle (mesh->halfedge (vh, next_vh));
+		val = vertex_valence_change (mesh, vh, prev_eh, next_eh);
+		return val;
+	}
+	int vertex_valence_change (VolumeMesh *mesh, OvmVeH vh, OvmEgH prev_eh, OvmEgH next_eh)
+	{
+		int val = 0;
+		std::unordered_set<OvmFaH> vh_adj_bnd_fhs;
+		get_adj_boundary_faces_around_vertex (mesh, vh, vh_adj_bnd_fhs);
+		auto seed_fh = pop_begin_element (vh_adj_bnd_fhs);
+		std::queue<OvmFaH> spread_set;
+		spread_set.push (seed_fh);
+		vh_adj_bnd_fhs.erase (seed_fh);
+		std::unordered_set<OvmFaH> one_side_fhs;
+		one_side_fhs.insert (seed_fh);
+		while (!spread_set.empty ()){
+			auto cur_fh = spread_set.front ();
+			spread_set.pop ();
+			std::unordered_set<OvmFaH> fh_adj_bnd_fhs;
+			get_adj_boundary_faces_around_face (mesh, cur_fh, fh_adj_bnd_fhs);
+			foreach (auto test_fh, fh_adj_bnd_fhs){
+				if (!contains (vh_adj_bnd_fhs, test_fh)) continue;
+				auto com_eh = get_common_edge_handle (mesh, cur_fh, test_fh);
+				if (com_eh == prev_eh || com_eh == next_eh) continue;
+				one_side_fhs.insert (test_fh);
+				spread_set.push (test_fh);
+				vh_adj_bnd_fhs.erase (test_fh);
+			}
+		}
+		//如果vh_adj_bnd_fhs为空了，说明这两条边不能够将vh周围的表面四边形面集划分成两个集合，这种情况是不允许的
+		if (vh_adj_bnd_fhs.empty ()){
+			return -1;
+		}
+		val = std::abs ((int)(one_side_fhs.size () - vh_adj_bnd_fhs.size ()));
+		return val;
+	}
+
 	int edge_valence_change (VolumeMesh *mesh, OvmEgH eh)
 	{
 		int val = mesh->valence (eh);

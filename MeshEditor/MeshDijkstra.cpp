@@ -8,6 +8,7 @@ MeshDijkstra::MeshDijkstra(VolumeMesh *_mesh, OvmVeH _start_vh, std::unordered_s
 	search_boundary = false;
 	search_inner = true;
 	min_valence = 4;
+	consider_topology_only = false;
 }
 
 
@@ -33,7 +34,7 @@ double MeshDijkstra::shortest_path (std::vector<OvmEgH> &best_path, OvmVeH &clos
 
 		S_set.insert (closest_node, closest_node->vh);
 
-		if (JC::contains (*end_vhs, closest_node->vh)){
+		if (reach_the_end (closest_node)){
 			std::deque<OvmEgH> path;
 			trace_back (path, closest_node->vh);
 			foreach (OvmEgH eh, path)
@@ -50,12 +51,22 @@ double MeshDijkstra::shortest_path (std::vector<OvmEgH> &best_path, OvmVeH &clos
 			auto old_node = U_set.retrieve (test_node->vh);
 			if (!old_node)
 				U_set.insert (test_node, test_node->vh);
-			else if (test_node->dist < old_node->dist)
+			else if (need_update (old_node, test_node))
 				U_set.update (test_node, test_node->vh);
 		}
 	}
 
 	return best_vh;
+}
+
+bool MeshDijkstra::reach_the_end (DijkstraVVPathNode *node)
+{
+	return JC::contains (*end_vhs, node->vh);
+}
+
+bool MeshDijkstra::need_update (DijkstraVVPathNode *old_node, DijkstraVVPathNode *test_node)
+{
+	return test_node->dist < old_node->dist;
 }
 
 void MeshDijkstra::get_adj_nodes (DijkstraVVPathNode *node, std::vector<DijkstraVVPathNode*> &adj_nodes)
@@ -64,23 +75,40 @@ void MeshDijkstra::get_adj_nodes (DijkstraVVPathNode *node, std::vector<Dijkstra
 	for (auto voh_it = mesh->voh_iter (node->vh); voh_it; ++voh_it){
 		OvmEgH test_eh = mesh->edge_handle (*voh_it);
 		if (min_valence > 0 && mesh->valence (test_eh) < min_valence) continue;
+		//如果searchable_ehs不为空，则需要判断一下test_eh是否包含在searchable_ehs中
+		if (!searchable_ehs.empty () && !JC::contains (searchable_ehs, test_eh)) continue;
+		//如果forbidden_ehs不为空，则需要判断一下test_eh是否包含在forbidden_ehs中
+		if (!forbidden_ehs.empty () && JC::contains (forbidden_ehs, test_eh)) continue;
 		OvmVeH test_vh = mesh->halfedge (*voh_it).to_vertex ();
+		if (S_set.exists (test_vh)) continue;
 
 		if (!search_boundary && mesh->is_boundary (test_vh) && !JC::contains (*end_vhs, test_vh)) continue;
 		if (!search_inner && !mesh->is_boundary (test_vh)) continue;
 
 		double marks = 0.0f, penalty = 0.0f;
-		double dist = std::sqrt (square_distance (test_vh, node->vh));
-		if (node->parent_vh != mesh->InvalidVertexHandle){
-			OvmVec3d parent_pt = mesh->vertex (node->parent_vh),
-				current_pt = mesh->vertex (node->vh),
-				test_pt = mesh->vertex (test_vh);
-			OvmVec3d vec1 = current_pt - parent_pt,
-				vec2 = test_pt - current_pt;
-			penalty = calc_interior_angle (vec1, vec2);
-			penalty *= 100;
+		//如果consider_topology_only为true，表示本次路径搜索只考虑拓扑信息，即边或者点的度数
+		if (consider_topology_only){
+			//marks = 1;
+			marks = 0;
+			if (node->parent_vh != mesh->InvalidVertexHandle){
+				auto vh_val = JC::vertex_valence_change (mesh, node->vh, node->parent_vh,test_vh);
+				penalty = vh_val;
+			}
+			marks = node->dist + penalty;
+		}else{
+			double dist = std::sqrt (square_distance (test_vh, node->vh));
+			if (node->parent_vh != mesh->InvalidVertexHandle){
+				OvmVec3d parent_pt = mesh->vertex (node->parent_vh),
+					current_pt = mesh->vertex (node->vh),
+					test_pt = mesh->vertex (test_vh);
+				OvmVec3d vec1 = current_pt - parent_pt,
+					vec2 = test_pt - current_pt;
+				penalty = calc_interior_angle (vec1, vec2);
+				penalty *= 100;
+			}
+			marks = node->dist + dist + penalty;
 		}
-		marks = node->dist + dist + penalty;
+		
 		DijkstraVVPathNode *new_adj_node = new DijkstraVVPathNode (test_vh, node->vh);
 		new_adj_node->dist = marks;
 		adj_nodes.push_back (new_adj_node);

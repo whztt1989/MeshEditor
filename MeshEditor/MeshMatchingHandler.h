@@ -10,6 +10,7 @@ struct MMData{
 	VolumeMesh *mesh;
 	BODY *body;
 	std::set<FACE*> interfaces;
+
 	std::unordered_set<OvmFaH> inter_patch, fixed_patch, free_patch;
 	std::unordered_set<OvmEgH> ehs_on_interface;
 	std::map<EDGE*, std::vector<OvmEgH> > ordered_ehs_on_edges;
@@ -51,6 +52,16 @@ struct ChordPosDesc{
 	}
 };
 
+struct CandiPolyline{
+	int dist;
+	std::vector<OvmEgH> polyline;
+	OvmVeH start_vh, end_vh;
+	//重载<运算符，使之能够在STL set容器中自动排序
+	bool operator < (const CandiPolyline &rhs_) const{
+		return dist < rhs_.dist;
+	}
+};
+
 namespace MM{
 	void adjust_interface_bondary (VolumeMesh *mesh, std::unordered_set<OvmFaH> &inter_fhs, std::set<FACE *> interfaces);
 	void get_hexas_within_depth (VolumeMesh *mesh, int depth_num, std::unordered_set<OvmFaH> &inter_fhs,
@@ -89,8 +100,8 @@ public:
 	void init_match ();
 	bool check_match ();
 
-	std::vector<OvmEgH> get_polyline_for_chord_inflation (VolumeMesh *mesh, std::pair<std::set<OvmVeH>, std::set<OvmVeH> > vhs_on_geom_egs,
-		std::vector<std::set<OvmEgH> > candi_interval_ehs);
+	std::pair<std::pair<OvmVeH, OvmVeH>, std::vector<OvmEgH> > get_polyline_for_chord_inflation (VolumeMesh *mesh, std::pair<std::set<OvmVeH>, std::set<OvmVeH> > vhs_on_geom_egs,
+		const std::vector<std::set<OvmEgH> > &candi_interval_ehs);
 
 	ChordPosDesc get_chord_pos_desc (DualChord *chord);
 	ChordPosDesc translate_chord_pos_desc (ChordPosDesc &in_cpd);
@@ -120,6 +131,10 @@ private:
 		EDGE *eg, std::vector<OvmEgH> &ordered_ehs);
 	void get_all_vhs_on_interface (std::unordered_set<OvmVeH> &all_vhs);
 	std::vector<OvmEgH> find_inflation_polyline (ChordPosDesc &in_cpd, ChordPosDesc &trans_cpd);
+
+	//获得两个网格点之间最优的polyline
+	CandiPolyline get_best_polyline (VolumeMesh *mesh, OvmVeH start_vh, OvmVeH end_vh,
+		std::vector<std::set<OvmEgH> > candi_interval_ehs, std::unordered_set<OvmEgH> rest_ehs);
 
 	//调整已匹配chords之间的配准关系，让匹配的chords方向一致
 	//一致的方向对于获取用于chord生成的polyline非常关键
@@ -237,6 +252,8 @@ private:
 public:
 	MMData *mm_data1, *mm_data2;
 	std::set<FACE *> interfaces;
+	//多面情况下的最外边界的边以及多面之间的共享边
+	std::set<EDGE*> bound_geom_edges, inner_geom_edges;
 	ChordPairs matched_chord_pairs;
 	double myresabs;
 };

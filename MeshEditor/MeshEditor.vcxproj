@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClCompile Include="choicesselectionwidget.cpp" />
     <ClCompile Include="chordmatchwidget.cpp" />
+    <ClCompile Include="ChordPolylineDijkstra.cpp" />
     <ClCompile Include="DepthCutHandler.cpp" />
     <ClCompile Include="FaceFacePath.cpp" />
     <ClCompile Include="CrossCrossPath.cpp" />
@@ -279,6 +280,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../choicesselectionwidget.h"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB -DQT_SCRIPT_LIB -DNOMINMAX -DINCLUDE_TEMPLATES -D_USE_MATH_DEFINES "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtXml" "-I$(QTDIR)\include\QtScript" "-I$(OM_INSTALL_DIR)\include" "-I$(OVM_INSTALL_DIR)\include" "-I$(A3DT)\include" "-I$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_mvo\source" "-I$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_stream\source" "-I$(HOOPS_INSTALL_DIR)\Dev_Tools\base_stream\source\stream_common" "-I$(HOOPS_INSTALL_DIR)\Dev_Tools\hoops_3dgs\source" "-I$(HOOPS_INSTALL_DIR)\Dev_Tools\utility\source" "-I$(QTDIR)\include\QtScriptTools"</Command>
     </CustomBuild>
+    <ClInclude Include="ChordPolylineDijkstra.h" />
     <ClInclude Include="DepthCutHandler.h" />
     <ClInclude Include="FaceFacePath.h" />
     <ClInclude Include="CrossCrossPath.h" />

@@ -94,6 +94,24 @@ namespace JC{
 			s.insert (*it);
 	}
 
+	template <typename T>
+	std::unordered_set<T> get_unordered_set (const std::vector<T> &v)
+	{
+		std::unordered_set<T> s;
+		for (auto it = v.begin (); it != v.end (); ++it)
+			s.insert (*it);
+		return s;
+	}
+
+	template <typename T>
+	std::unordered_set<T> get_unordered_set (const std::set<T> &v)
+	{
+		std::unordered_set<T> s;
+		for (auto it = v.begin (); it != v.end (); ++it)
+			s.insert (*it);
+		return s;
+	}
+
 	template <typename Container, typename T>
 	bool contains (Container &container, T &val)
 	{
@@ -331,6 +349,8 @@ namespace JC{
 
 	//////////////////////////////////////////////////////////////////////////
 	//topology calculation functions
+	int vertex_valence_change (VolumeMesh *mesh, OvmVeH vh, OvmVeH prev_vh, OvmVeH next_vh);
+	int vertex_valence_change (VolumeMesh *mesh, OvmVeH vh, OvmEgH prev_eh, OvmEgH next_eh);
 	int edge_valence_change (VolumeMesh *mesh, OvmEgH eh, OvmFaH fh);
 	int edge_valence_change (VolumeMesh *mesh, OvmEgH eh, OvmFaH fh1, OvmFaH fh2);
 	int edge_valence_change (VolumeMesh *mesh, OvmEgH eh);

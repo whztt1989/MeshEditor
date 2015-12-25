@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QMessageBox>
 #include "bool_api_options.hxx"
+#include "ChordPolylineDijkstra.h"
 
 namespace MM{
 	void adjust_interface_bondary (VolumeMesh *mesh, std::unordered_set<OvmFaH> &inter_fhs, std::set<FACE *> interfaces)
@@ -490,7 +491,7 @@ void MeshMatchingHandler::construct_dual_structure_and_gather_interface_elements
 			//构建chord上的四边形面集以及顺序
 			new_chord->ordered_fhs.clear ();
 			for (int i = 0; i != new_chord->ordered_ehs.size () - 1; ++i){
-				auto fh = JC::get_common_face_handle (mesh, new_chord->ordered_ehs[i], new_chord->ordered_ehs[i]);
+				auto fh = JC::get_common_face_handle (mesh, new_chord->ordered_ehs[i], new_chord->ordered_ehs[i + 1]);
 				if (JC::contains (new_chord->ordered_fhs, fh))
 					new_chord->is_self_int = true;
 				new_chord->ordered_fhs.push_back (fh);
@@ -610,6 +611,26 @@ bool MeshMatchingHandler::locate_interfaces ()
 		//	}HC_Close_Segment ();
 		//}HC_Close_Segment ();
 	}
+
+	//定义一个函数用于获得边界几何边以及内部几何边
+	auto fGetDiffGeomEdges = [&] (std::set<FACE*> faces, std::set<EDGE*>&bnd_geom_egs, std::set<EDGE*>&inn_geom_egs){
+		bnd_geom_egs.clear (); inn_geom_egs.clear ();
+		
+		foreach (auto f, faces){
+			ENTITY_LIST edge_list;
+			api_get_edges (f, edge_list);
+			for (int i = 0; i != edge_list.count (); ++i){
+				auto eg = (EDGE*)edge_list[i];
+				if (JC::contains (bnd_geom_egs, eg)){
+					inn_geom_egs.insert (eg);
+					bnd_geom_egs.erase (eg);
+				}else
+					bnd_geom_egs.insert (eg);
+			}
+		}
+	};
+
+	fGetDiffGeomEdges (interfaces, bound_geom_edges, inner_geom_edges);
 	return true;
 }
 
@@ -1176,20 +1197,94 @@ std::vector<std::set<OvmEgH> > MeshMatchingHandler::get_candidate_interval_ehs (
 	return candidate_interval_ehs;
 }
 
-std::vector<OvmEgH> MeshMatchingHandler::get_polyline_for_chord_inflation (VolumeMesh *mesh, std::pair<std::set<OvmVeH>, 
-	std::set<OvmVeH> > vhs_on_geom_egs,
-	std::vector<std::set<OvmEgH> > candi_interval_ehs)
+CandiPolyline MeshMatchingHandler::get_best_polyline (VolumeMesh *mesh, OvmVeH start_vh, OvmVeH end_vh,
+	std::vector<std::set<OvmEgH> > candi_interval_ehs, std::unordered_set<OvmEgH> rest_ehs)
 {
+	CandiPolyline candi_polyline;
+	candi_polyline.start_vh = start_vh; candi_polyline.end_vh = end_vh;
+	candi_polyline.dist = 0;
+	while (!candi_interval_ehs.empty ()){
+		auto cur_candi_interval_ehs = JC::pop_begin_element (candi_interval_ehs);
+		//如果cur_candi_interval_ehs为空，则表示是自相交处的占位单元，直接略过即可 
+		if (cur_candi_interval_ehs.empty ()) continue;
+
+		//获得cur_candi_interval_ehs上面所有的网格点作为搜索的目标点集合
+		std::unordered_set<OvmVeH> next_candi_vhs;
+		std::map<OvmVeH, OvmEgH> vh_eh_mapping;
+		foreach (auto eh, cur_candi_interval_ehs){
+			auto vh1 = mesh->edge (eh).from_vertex (), vh2 = mesh->edge (eh).to_vertex ();
+			next_candi_vhs.insert (vh1);
+			next_candi_vhs.insert (vh2);
+			vh_eh_mapping.insert (std::make_pair (vh1, eh));
+			vh_eh_mapping.insert (std::make_pair (vh2, eh));
+		}
+		//如果start_vh已经包含在next_candi_vhs中时，直接从vh_eh_mapping取出那条边即可
+		if (JC::contains (next_candi_vhs, start_vh)){
+			auto adj_eh = vh_eh_mapping[start_vh];
+			candi_polyline.polyline.push_back (adj_eh);
+			start_vh = mesh->edge (adj_eh).to_vertex () == start_vh? mesh->edge (adj_eh).from_vertex ():
+				mesh->edge (adj_eh).to_vertex ();
+		}
+		//否则就要用Dijkstra路径搜索找出最优路径
+		else{
+			MeshDijkstra md (mesh, start_vh, &next_candi_vhs);
+			md.search_boundary = true; md.search_inner = false;
+			md.searchable_ehs = rest_ehs;
+			md.min_valence = 0;
+			md.consider_topology_only = true;
+			std::vector<OvmEgH> best_path;
+			OvmVeH closest_vh;
+			auto cur_dist = md.shortest_path (best_path, closest_vh);
+			auto closest_eh = vh_eh_mapping[closest_vh];
+			foreach (auto eh, best_path)
+				candi_polyline.polyline.push_back (eh);
+			candi_polyline.polyline.push_back (closest_eh);
+
+			start_vh = mesh->edge (closest_eh).to_vertex () == closest_vh? mesh->edge (closest_eh).from_vertex ():
+				mesh->edge (closest_eh).to_vertex ();
+		}
+	}
+	return candi_polyline;
+}
+
+std::pair<std::pair<OvmVeH, OvmVeH>, std::vector<OvmEgH> > MeshMatchingHandler::get_polyline_for_chord_inflation (VolumeMesh *mesh, std::pair<std::set<OvmVeH>, 
+	std::set<OvmVeH> > vhs_on_geom_egs,
+	const std::vector<std::set<OvmEgH> > &candi_interval_ehs)
+{
+	auto mm_data = get_mesh_matching_data (mesh);
+	auto ehs_on_interfaces = mm_data->ehs_on_interface;
 	std::vector<OvmEgH> polyline;
 	auto start_geom_vhs = vhs_on_geom_egs.first;
 	auto end_geom_vhs = vhs_on_geom_egs.second;
-
-	foreach (auto start_vh, start_geom_vhs){
-		foreach (auto end_vh, end_geom_vhs){
-
-		}
+	//获得除了ehs_on_interfaces中除了candi_interval_ehs以及集合边上的网格边剩余的网格边
+	auto rest_ehs = ehs_on_interfaces;
+	//去掉贴合面外围几何边
+	foreach (auto eg, bound_geom_edges){
+		auto ehs = mm_data->ordered_ehs_on_edges[eg];
+		foreach (auto eh, ehs)
+			rest_ehs.erase (eh);
 	}
-	return polyline;
+
+	std::vector<OvmEgH> best_polyline;
+	std::set<CandiPolyline> all_candi_polylines;
+	foreach (auto start_vh, start_geom_vhs){
+		//foreach (auto end_vh, end_geom_vhs){
+		//	if (end_vh == start_vh) continue;
+		//	auto candi_ehs = get_best_polyline (mesh, start_vh, end_vh, candi_interval_ehs, rest_ehs);
+		//	all_candi_polylines.insert (candi_ehs);
+		//}
+		auto end_geom_vhs_unordered_set = JC::get_unordered_set (end_geom_vhs);
+		ChordPolylineDijkstra cpd (mesh, start_vh, &end_geom_vhs_unordered_set, &candi_interval_ehs, &rest_ehs, 
+			get_mesh_matching_data (mesh)->matched_chords);
+		CandiPolyline one_candi_polyline;
+		one_candi_polyline.dist = cpd.shortest_path (one_candi_polyline.polyline, one_candi_polyline.end_vh);
+		all_candi_polylines.insert (one_candi_polyline);
+	}
+	std::pair<std::pair<OvmVeH, OvmVeH>, std::vector<OvmEgH> > best_result;
+	best_result.first.first = (*(all_candi_polylines.begin ())).start_vh;
+	best_result.first.second = (*(all_candi_polylines.begin ())).end_vh;
+	best_result.second = (*(all_candi_polylines.begin ())).polyline;
+	return best_result;
 }
 
 bool MeshMatchingHandler::can_two_chords_match (DualChord *chord1, DualChord *chord2)
@@ -1417,6 +1512,8 @@ ChordPosDesc MeshMatchingHandler::translate_chord_pos_desc (ChordPosDesc &in_cpd
 		std::vector<DualChord*> translated_graph;
 		foreach (auto &chord, graph){
 			if (chord == in_cpd.chord){
+				translated_graph.push_back (NULL);
+			}else if (chord == NULL){
 				translated_graph.push_back (NULL);
 			}else{
 				auto matched_chord = get_matched_chord (chord);

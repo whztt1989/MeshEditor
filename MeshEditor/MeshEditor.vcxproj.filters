@@ -338,6 +338,9 @@
     <ClCompile Include="choicesselectionwidget.cpp">
       <Filter>ControlWidgets</Filter>
     </ClCompile>
+    <ClCompile Include="ChordPolylineDijkstra.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -462,6 +465,9 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_choicesselectionwidget.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChordPolylineDijkstra.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

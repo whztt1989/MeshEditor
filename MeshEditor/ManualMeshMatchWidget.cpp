@@ -568,36 +568,12 @@ void ManualMeshMatchWidget::on_get_polyline ()
 
 	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate start geom vertices");
 	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate end geom vertices");
+	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate interval ehs");
+	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "best polyline");
 
 	MeshRenderOptions render_options;
 
-	if (!chord_to_match->is_closed){
-		auto candidate_vertices = mm_handler->get_candidate_end_geom_vertices (trans_cpd);
-		auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate start geom vertices");
-		foreach (auto vh, candidate_vertices.first)
-			group->vhs.insert (vh);
-
-		
-		render_options.vertex_color = "blue";
-		render_options.vertex_size = 1.0;
-		hoopsview_to_draw->render_mesh_group (group, render_options);
-		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
-
-		group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate end geom vertices");
-		foreach (auto vh, candidate_vertices.second)
-			group->vhs.insert (vh);
-
-		render_options.vertex_color = "red";
-		render_options.vertex_size = 1.0;
-		hoopsview_to_draw->render_mesh_group (group, render_options);
-		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
-	}
 	auto interval_ehs = mm_handler->get_candidate_interval_ehs (trans_cpd);
-
-	hoopsview_to_draw->derender_mesh_groups ("sheet inflation", "candidate interval ehs");
-
-
-	
 
 	foreach (auto ehs, interval_ehs){
 		auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate interval ehs");
@@ -608,6 +584,38 @@ void ManualMeshMatchWidget::on_get_polyline ()
 		render_options.edge_width = 6;
 		hoopsview_to_draw->render_mesh_group (group, render_options);
 		hoopsview_to_draw->set_mesh_group_selectability (group, false, true, false);
+	}
+
+	if (!chord_to_match->is_closed){
+		auto candidate_vertices = mm_handler->get_candidate_end_geom_vertices (trans_cpd);
+		auto group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate start geom vertices");
+		foreach (auto vh, candidate_vertices.first)
+			group->vhs.insert (vh);
+
+		
+		render_options.vertex_color = "red";
+		render_options.vertex_size = 1.0;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
+
+		group = new VolumeMeshElementGroup (mesh, "sheet inflation", "candidate end geom vertices");
+		foreach (auto vh, candidate_vertices.second)
+			group->vhs.insert (vh);
+
+		render_options.vertex_color = "blue";
+		render_options.vertex_size = 1.0;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+		hoopsview_to_draw->set_mesh_group_selectability (group, true, false, false);
+
+		auto best_polyline = mm_handler->get_polyline_for_chord_inflation (mesh, candidate_vertices, interval_ehs);
+		group = new VolumeMeshElementGroup (mesh, "sheet inflation", "best polyline");
+		foreach (auto eh, best_polyline.second)
+			group->ehs.insert (eh);
+
+		render_options.edge_color = "purple";
+		render_options.edge_width = 12;
+		hoopsview_to_draw->render_mesh_group (group, render_options);
+
 	}
 
 	hoopsview_to_draw->show_mesh_faces (true);
